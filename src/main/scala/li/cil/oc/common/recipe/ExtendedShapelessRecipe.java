@@ -17,7 +17,7 @@ public class ExtendedShapelessRecipe implements ICraftingRecipe {
     private ShapelessRecipe wrapped;
 
     public ExtendedShapelessRecipe(ShapelessRecipe wrapped) {
-        this.wrapped = wrapped;
+        this.wrapped = ExtendedRecipe.patchRecipe(wrapped);
     }
 
     @Override

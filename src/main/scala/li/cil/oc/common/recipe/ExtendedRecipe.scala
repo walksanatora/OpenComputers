@@ -3,6 +3,7 @@ package li.cil.oc.common.recipe
 import java.util.UUID
 
 import li.cil.oc.Constants
+import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
 import li.cil.oc.api
 import li.cil.oc.api.detail.ItemInfo
@@ -21,6 +22,7 @@ import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.item.crafting.IRecipe
 import net.minecraft.nbt.CompoundNBT
+import net.minecraft.nbt.StringNBT
 import net.minecraft.tags.ItemTags
 
 import scala.collection.convert.ImplicitConversionsToScala._
@@ -50,6 +52,36 @@ object ExtendedRecipe {
   private lazy val tablet = api.Items.get(Constants.ItemName.Tablet)
   private lazy val print = api.Items.get(Constants.BlockName.Print)
   private val beaconBlocks = ItemTags.bind("forge:beacon_base_blocks")
+
+  def patchRecipe[R <: IRecipe[_]](recipe: R): R = {
+    val resultStack = recipe.getResultItem
+    val resultItemName = api.Items.get(resultStack)
+
+    // EEPROM initialization.
+    if (resultItemName == eeprom &&
+      resultStack.getCount == 1 && resultStack.hasTag &&
+      recipe.getIngredients.size == 2) {
+      val nbt = resultStack.getTag.getCompound(Settings.namespace + "data")
+      // Load EEPROM code (if it's a string)
+      val codeNbt = nbt.get(Settings.namespace + "eeprom")
+      if (codeNbt != null && codeNbt.getType == StringNBT.TYPE) {
+        val codePath = codeNbt.asInstanceOf[StringNBT].getAsString
+        val code = new Array[Byte](Settings.get.eepromSize)
+        val count = OpenComputers.getClass.getResourceAsStream(Settings.scriptPath + codePath).read(code)
+        nbt.putByteArray(Settings.namespace + "eeprom", code.take(count))
+      }
+      // Load EEPROM data (if it's a string)
+      val dataNbt = nbt.get(Settings.namespace + "userdata")
+      if (dataNbt != null && dataNbt.getType == StringNBT.TYPE) {
+        val dataPath = dataNbt.asInstanceOf[StringNBT].getAsString
+        val data = new Array[Byte](Settings.get.eepromDataSize)
+        val count = OpenComputers.getClass.getResourceAsStream(Settings.scriptPath + dataPath).read(data)
+        nbt.putByteArray(Settings.namespace + "userdata", data.take(count))
+      }
+    }
+
+    recipe
+  }
 
   def addNBTToResult(recipe: IRecipe[_], craftedStack: ItemStack, inventory: CraftingInventory): ItemStack = {
     val craftedItemName = api.Items.get(craftedStack)
