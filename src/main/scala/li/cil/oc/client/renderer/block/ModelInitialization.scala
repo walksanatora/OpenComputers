@@ -78,15 +78,18 @@ object ModelInitialization {
 
   private def registerModel(blockName: String, blockLocation: ModelResourceLocation, itemLocation: ModelResourceLocation): Unit = {
     val descriptor = api.Items.get(blockName)
-    val block = descriptor.block()
-    val stack = descriptor.createItemStack(1)
-
-    if (!stack.isEmpty) {
-      val shaper = Minecraft.getInstance.getItemRenderer.getItemModelShaper
-      shaper.register(stack.getItem, itemLocation)
+    if (itemLocation != null) {
+      val stack = descriptor.createItemStack(1)
+      if (!stack.isEmpty) {
+        val shaper = Minecraft.getInstance.getItemRenderer.getItemModelShaper
+        shaper.register(stack.getItem, itemLocation)
+      }
     }
-    block.getStateDefinition.getPossibleStates.foreach {
-      modelRemappings += BlockModelShapes.stateToModelLocation(_) -> blockLocation
+    if (blockLocation != null) {
+      val block = descriptor.block()
+      block.getStateDefinition.getPossibleStates.foreach {
+        modelRemappings += BlockModelShapes.stateToModelLocation(_) -> blockLocation
+      }
     }
   }
 
