@@ -1,7 +1,10 @@
 buildscript {
     repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        mavenCentral()
+        jcenter()
+        maven {
+            name = "forge"
+            url = "https://maven.minecraftforge.net/"
+        }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
@@ -17,7 +20,8 @@ apply plugin: 'scala'
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 file "build.properties" withReader {
     def prop = new Properties()
