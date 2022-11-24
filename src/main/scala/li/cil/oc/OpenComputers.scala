@@ -34,6 +34,8 @@ object OpenComputers {
 
   final val Name = "OpenComputers"
 
+  final val Version = "@VERSION@"
+
   final val log: Logger = LogManager.getLogger(Name)
 
   lazy val proxy: Proxy = {
@@ -56,8 +58,6 @@ object OpenComputers {
 
 class OpenComputers {
   val modContainer: ModContainer = ModLoadingContext.get.getActiveContainer
-
-  val Version = modContainer.getModInfo.getVersion
 
   ScorgeModLoadingContext.get.getModEventBus.register(this)
   OpenComputers.instance = Some(this)
