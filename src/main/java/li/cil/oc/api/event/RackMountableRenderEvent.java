@@ -96,12 +96,6 @@ public abstract class RackMountableRenderEvent extends Event {
      * will have been adjusted such that rendering a one by one quad starting at the
      * origin will fill the full front face of the rack (i.e. rotation and translation
      * have already been applied).
-     * <br>
-     * If you wish to have something glowing (like LEDs), you'll have to disable
-     * lighting yourself (and enable it again afterwards!).
-     * <br>
-     * Use the {@link #renderOverlay(ResourceLocation)} to render a slice from a
-     * texture in the vertical area occupied by the mountable.
      */
     public static class TileEntity extends RackMountableRenderEvent {
         /**

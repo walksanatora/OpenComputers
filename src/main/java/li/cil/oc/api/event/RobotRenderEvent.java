@@ -70,7 +70,7 @@ public class RobotRenderEvent extends RobotEvent {
      * the middle of the robot, nor does it affect upgrades.
      * <br>
      * Use {@link #getColorMultiplier()} to obtain the pure multiplier or
-     * {@link #getColorMultiplier(float, float, float)} if you need to mix
+     * {@link #getColorValue(float, float, float)} if you need to mix
      * your own color into it.
      */
     public void multiplyColors(float r, float g, float b) {
