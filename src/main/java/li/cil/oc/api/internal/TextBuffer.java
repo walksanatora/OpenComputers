@@ -11,10 +11,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * This interface implements functionality for displaying and manipulating
  * text, like screens and robots. An implementation can be obtained via the
  * screens' item driver.
- * <p/>
+ * <br>
  * This allows re-using the built-in screen logic in third-party code without
  * access to the internals of OC.
- * <p/>
+ * <br>
  * To get an instance of the buffer component, use its item driver, e.g.:
  * <pre>
  *     final ItemStack stack = li.cil.oc.api.Items.get("screen1").createItemStack(1);
@@ -24,17 +24,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public interface TextBuffer extends ManagedEnvironment, Persistable {
     /**
      * Controls how much energy the buffer will consume per tick.
-     * <p/>
+     * <br>
      * This is <em>not</em> necessarily the actual amount consumed per tick,
      * instead it is a base value that cost is based on, incorporating a few
      * other factors. This is the cost a tier one screen will consume if every
      * character is lit (non-black). Larger buffers (i.e. buffers with a higher
      * maximum resolution) cost proportionally more.
-     * <p/>
+     * <br>
      * Note that this amount of energy is not necessarily subtracted each tick,
      * instead every n ticks, n times the amount of energy it costs to run the
      * buffer will be consumed, where n is configurable in the OC config.
-     * <p/>
+     * <br>
      * This defaults to OC's built-in default value.
      *
      * @param value the base energy cost per tick.
@@ -52,7 +52,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set whether the buffer is powered on.
-     * <p/>
+     * <br>
      * For example, screens can be powered on and off by sending a redstone
      * pulse into them, in addition to their component API.
      *
@@ -89,7 +89,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set the 'aspect ratio' of the buffer.
-     * <p/>
+     * <br>
      * Not to be confused with the maximum resolution of the buffer, this
      * refers to the 'physical' size of the buffer's container. For multi-
      * block screens, for example, this is the number of horizontal and
@@ -102,7 +102,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Get the aspect ratio of the buffer.
-     * <p/>
+     * <br>
      * Note that this is in fact <tt>width / height</tt>.
      *
      * @see #setAspectRatio(double, double)
@@ -134,7 +134,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set the buffer's active viewport resolution.
-     * <p/>
+     * <br>
      * This cannot exceed the current buffer resolution.
      *
      * @param width  the horizontal resolution.
@@ -160,7 +160,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Sets the maximum color depth supported by this buffer.
-     * <p/>
+     * <br>
      * Note that this is the <em>maximum</em> supported depth, lower depths
      * will be supported, too. So when setting this to four bit, one bit will
      * be supported, too. When setting this to eight bit, four and one bit
@@ -190,7 +190,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set the color of the active color palette at the specified index.
-     * <p/>
+     * <br>
      * This will error if the current depth does not have a palette (one bit).
      *
      * @param index the index at which to set the color.
@@ -200,7 +200,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Get the color in the active color palette at the specified index.
-     * <p/>
+     * <br>
      * This will error if the current depth does not have a palette (one bit).
      *
      * @param index the index at which to get the color.
@@ -218,11 +218,11 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set the active foreground color.
-     * <p/>
+     * <br>
      * If the value is not from the palette, the actually stored value may
      * differ from the specified one, as it is converted to the buffer's
      * current color depth.
-     * <p/>
+     * <br>
      * For palette-only color formats (four bit) the best fit from the palette
      * is chosen, if the value is not from the palette.
      *
@@ -253,11 +253,11 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set the active background color.
-     * <p/>
+     * <br>
      * If the value is not from the palette, the actually stored value may
      * differ from the specified one, as it is converted to the buffer's
      * current color depth.
-     * <p/>
+     * <br>
      * For palette-only color formats (four bit) the best fit from the palette
      * is chosen, if the value is not from the palette.
      *
@@ -280,7 +280,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Copy a portion of the text buffer.
-     * <p/>
+     * <br>
      * This will copy the area's text and colors.
      *
      * @param column                the starting horizontal index of the area to copy.
@@ -294,7 +294,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Fill a portion of the text buffer.
-     * <p/>
+     * <br>
      * This will set the area's colors to the currently active ones.
      *
      * @param column the starting horizontal index of the area to fill.
@@ -307,7 +307,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Write a string into the text buffer.
-     * <p/>
+     * <br>
      * This will apply the currently active colors to the changed area.
      *
      * @param column   the starting horizontal index to write at.
@@ -328,7 +328,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Get the foreground color of the text buffer at the specified location.
-     * <p/>
+     * <br>
      * <em>Important</em>: this may be a palette index.
      *
      * @param column the horizontal index.
@@ -349,7 +349,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Get the background color of the text buffer at the specified location.
-     * <p/>
+     * <br>
      * <em>Important</em>: this may be a palette index.
      *
      * @param column the horizontal index.
@@ -370,12 +370,12 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Overwrites a portion of the text in raw mode.
-     * <p/>
+     * <br>
      * This will copy the given char array into the buffer, starting at the
      * specified column and row. The array is expected to be indexed row-
      * first, i.e. the first dimension is the vertical axis, the second
      * the horizontal.
-     * <p/>
+     * <br>
      * <em>Important</em>: this performs no checks as to whether something
      * actually changed. It will always send the changed patch to clients.
      * It will also not crop the specified array to the actually used range.
@@ -391,13 +391,13 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Overwrites a portion of the foreground color information in raw mode.
-     * <p/>
+     * <br>
      * This will convert the specified RGB data (in <tt>0xRRGGBB</tt> format)
      * to the internal, packed representation and copy it into the buffer,
      * starting at the specified column and row. The array is expected to be
      * indexed row-first, i.e. the first dimension is the vertical axis, the
      * second the horizontal.
-     * <p/>
+     * <br>
      * <em>Important</em>: this performs no checks as to whether something
      * actually changed. It will always send the changed patch to clients.
      * It will also not crop the specified array to the actually used range.
@@ -413,13 +413,13 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Overwrites a portion of the background color information in raw mode.
-     * <p/>
+     * <br>
      * This will convert the specified RGB data (in <tt>0xRRGGBB</tt> format)
      * to the internal, packed representation and copy it into the buffer,
      * starting at the specified column and row. The array is expected to be
      * indexed row-first, i.e. the first dimension is the vertical axis, the
      * second the horizontal.
-     * <p/>
+     * <br>
      * <em>Important</em>: this performs no checks as to whether something
      * actually changed. It will always send the changed patch to clients.
      * It will also not crop the specified array to the actually used range.
@@ -437,11 +437,11 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Renders the <em>text</em> displayed on the buffer.
-     * <p/>
+     * <br>
      * You are responsible for setting up the actual context and applying any
      * transformations necessary to properly position and scale the text before
      * calling this. The text should be rendered on a black background.
-     * <p/>
+     * <br>
      * You can use this to either render the text in a GUI or in the world.
      *
      * @return <tt>true</tt> if the displayed content changed since the last
@@ -452,7 +452,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * The natural width of the rendered text.
-     * <p/>
+     * <br>
      * This is the width of the complete text buffer, in pixels. In other
      * words, this is the width of the buffer in chars times the actual width
      * of a single char in pixels.
@@ -464,7 +464,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * The natural height of the rendered text.
-     * <p/>
+     * <br>
      * This is the height of the complete text buffer, in pixels. In other
      * words, this is the height of the buffer in chars times the actual height
      * of a single char in pixels.
@@ -476,7 +476,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Set whether the contents of the buffer should currently be rendered.
-     * <p/>
+     * <br>
      * Note that this is automatically overwritten when the buffer's power
      * state changes, i.e. when it runs out of power or gets back power.
      *
@@ -497,7 +497,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a key down event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will trigger a message that will be picked up by
      * keyboards, which will then cause a signal in attached machines.
@@ -510,7 +510,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a key up event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will trigger a message that will be picked up by
      * keyboards, which will then cause a signal in attached machines.
@@ -523,7 +523,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a code-point (text) event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will trigger a message that will be picked up by
      * keyboards, which will then cause a signal in attached machines.
@@ -536,7 +536,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a clipboard paste event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will trigger a message that will be picked up by
      * keyboards, which will then cause a signal in attached machines.
@@ -548,7 +548,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a mouse button down event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will cause a signal in attached machines.
      *
@@ -561,7 +561,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a mouse drag event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will cause a signal in attached machines.
      *
@@ -574,7 +574,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a mouse button release event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will cause a signal in attached machines.
      *
@@ -587,7 +587,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
 
     /**
      * Signals a mouse wheel scroll event for the buffer.
-     * <p/>
+     * <br>
      * On the client side this causes a packet to be sent to the server. On the
      * server side this will cause a signal in attached machines.
      *

@@ -8,7 +8,7 @@ import net.minecraft.util.ResourceLocation;
 /**
  * This class provides factory methods for creating file systems that are
  * compatible with the built-in file system driver.
- * <p/>
+ * <br>
  * File systems created this way and wrapped in a managed environment via
  * {@link #asManagedEnvironment} or its overloads will appear as
  * <tt>filesystem</tt> components in the component network. Note that the
@@ -16,7 +16,7 @@ import net.minecraft.util.ResourceLocation;
  * to change the file system's visibility (e.g. like the disk drive does) you
  * must cast the environment's node to {@link li.cil.oc.api.network.Component}
  * and set the visibility to the desired value.
- * <p/>
+ * <br>
  * Note that these methods should <em>not</em> be called in the pre-init phase,
  * since the {@link li.cil.oc.api.API#fileSystem} may not have been initialized
  * at that time. Only start calling these methods in the init phase or later.
@@ -26,13 +26,13 @@ public final class FileSystem {
      * Creates a new file system based on a mod-specific resource location where
      * the namespace refers to the mod and the resource path denotes a
      * (mandatory) subpath relative to that mod's assets directory.
-     * <p/>
+     * <br>
      * If {@code location} is stored in a JAR file, this will create a read-only
      * file system based on that JAR file. If {@code location} is stored in the
      * native file system, this will create a read-only file system from the the
      * location constructed as described above (relative to the root of the
      * namespace).
-     * <p/>
+     * <br>
      * If the specified path cannot be located, the creation fails and this
      * returns <tt>null</tt>.
      *
@@ -47,16 +47,16 @@ public final class FileSystem {
 
     /**
      * Creates a new <em>writable</em> file system in the save folder.
-     * <p/>
+     * <br>
      * This will create a folder, if necessary, and create a writable virtual
      * file system based in that folder. The actual path is based in a sub-
      * folder of the save folder. The actual path is built like this:
      * <pre>"saves/" + WORLD_NAME + "/opencomputers/" + root</pre>
      * The first part may differ, in particular for servers.
-     * <p/>
+     * <br>
      * Usually the name will be the address of the node used to represent the
      * file system.
-     * <p/>
+     * <br>
      * Note that by default file systems are "buffered", meaning that any
      * changes made to them are only saved to disk when the world is saved. This
      * ensured that the file system contents do not go "out of sync" when the
@@ -89,10 +89,10 @@ public final class FileSystem {
 
     /**
      * Creates a new <em>writable</em> file system that resides in memory.
-     * <p/>
+     * <br>
      * Any contents created and written on this file system will be lost when
      * the node is removed from the network.
-     * <p/>
+     * <br>
      * This is used for computers' <tt>/tmp</tt> mount, for example.
      *
      * @param capacity the capacity of the file system.
@@ -120,24 +120,24 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * This can be useful for providing some data if you don't wish to implement
      * your own driver. Which will probably be most of the time. If you need
      * more control over the node, implement your own, and connect this one to
      * it. In that case you will have to forward any disk driver messages to the
      * node, though.
-     * <p/>
+     * <br>
      * The container parameter is used to give the file system some physical
      * relation to the world, for example this is used by hard drives to send
      * the disk event notifications to the client that are used to play disk
      * access sounds.
-     * <p/>
+     * <br>
      * The container may be <tt>null</tt>, if no such context can be provided.
-     * <p/>
+     * <br>
      * The access sound is the name of the sound effect to play when the file
      * system is accessed, for example by listing a directory or reading from
      * a file. It may be <tt>null</tt> to create a silent file system.
-     * <p/>
+     * <br>
      * The speed multiplier controls how fast read and write operations on the
      * file system are. It must be a value in [1,6], and controls the access
      * speed, with the default being one.
@@ -164,7 +164,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates a file system with the a read-only label and the specified
      * access sound and file system speed.
      *
@@ -187,7 +187,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates a file system with the specified label and the specified access
      * sound, using the default file system speed.
      *
@@ -207,7 +207,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates a file system with a read-only label and the specified access
      * sound, using the default file system speed.
      *
@@ -227,7 +227,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates a file system with the specified label, without an environment
      * and access sound, using the default file system speed.
      *
@@ -242,7 +242,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates a file system with a read-only label, without an environment and
      * access sound, using the default file system speed.
      *
@@ -257,7 +257,7 @@ public final class FileSystem {
     /**
      * Creates a network node that makes the specified file system available via
      * the common file system driver.
-     * <p/>
+     * <br>
      * Creates an unlabeled file system (i.e. the label can neither be read nor
      * written), without an environment and access sound, using the default
      * file system speed.

@@ -256,12 +256,6 @@ processResources {
     }
 }
 
-allprojects {
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-    }
-}
-
 jar {
     configurations.embedded.each { dep ->
         from(project.zipTree(dep)) {

@@ -36,6 +36,10 @@ object PacketHandler {
   var serverHandler: PacketHandler = _
 
   private[oc] def handlePacket(side: NetworkDirection, arr: Array[Byte], player: PlayerEntity): Unit = {
+    // Don't crash on badly formatted packets (may have been altered by a
+    // malicious client, in which case we don't want to allow it to kill the
+    // server like this). Just spam the log a bit... ;)
+    var stream: InputStream = null
     try {
       val handler = side match {
         case NetworkDirection.PLAY_TO_CLIENT => clientHandler
@@ -43,16 +47,17 @@ object PacketHandler {
         case _ => null
       }
       if (handler != null) {
-        val stream = new ByteArrayInputStream(arr)
-        if (stream.read() == 0) handler.dispatch(handler.createParser(stream, player))
-        else handler.dispatch(handler.createParser(new InflaterInputStream(stream), player))
+        stream = new ByteArrayInputStream(arr)
+        if (stream.read() != 0) stream = new InflaterInputStream(stream)
+        handler.dispatch(handler.createParser(stream, player))
       }
     } catch {
-      // Don't crash on badly formatted packets (may have been altered by a
-      // malicious client, in which case we don't want to allow it to kill the
-      // server like this). Just spam the log a bit... ;)
       case e: Throwable =>
         OpenComputers.log.warn("Received a badly formatted packet.", e)
+    } finally {
+      if (stream != null) {
+        stream.close()
+      }
     }
 
     // Avoid AFK kicks by marking players as non-idle when they send packets.
