@@ -55,4 +55,13 @@ public interface MachineHost extends EnvironmentHost {
      * @param node the node that was disconnected from the network.
      */
     void onMachineDisconnect(Node node);
+
+    /** Helper method for printing the machine position in error messages and debug statements. */
+    default String machinePosition()
+    {
+        if (world() != null && world().dimension() != null)
+            return String.format("(%g, %g, %g, %s)", xPosition(), yPosition(), zPosition(), world().dimension().location());
+        else
+            return String.format("(%g, %g, %g)", xPosition(), yPosition(), zPosition());
+    }
 }

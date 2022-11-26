@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.Direction
 import net.minecraft.util.math.vector.Vector3d
+import net.minecraftforge.common.util.LazyOptional
 import net.minecraftforge.items.CapabilityItemHandler
 import net.minecraftforge.items.IItemHandler
 import net.minecraftforge.items.IItemHandlerModifiable
@@ -43,35 +44,40 @@ object InventoryUtils {
       (stackA.getDamageValue == stackB.getDamageValue) &&
       (!checkNBT || ItemStack.tagMatches(stackA, stackB))
 
-  private def optionToScala[T](opt: Optional[T]): Option[T] = if (opt.isPresent) Some(opt.get) else None
-
   /**
-   * Retrieves an actual inventory implementation for a specified world coordinate.
-   * <br>
-   * This performs special handling for (double-)chests and also checks for
-   * mine carts with chests.
+   * Retrieves an actual inventory implementation for a specified world coordinate,
+   * complete with a reference to the source of said implementation.
    */
-  def inventoryAt(position: BlockPosition, side: Direction): Option[IItemHandler] = position.world match {
+  def inventorySourceAt(position: BlockPosition, side: Direction): Option[InventorySource] = position.world match {
     case Some(world) if world.blockExists(position) => world.getBlockEntity(position) match {
-      case tile: TileEntity if tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).isPresent => optionToScala(tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).resolve)
-      case tile: IInventory => Option(asItemHandler(tile, side))
+      case tile: TileEntity if tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).isPresent => Option(BlockInventorySource(position, side, tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).orElse(null)))
+      case tile: IInventory => Option(BlockInventorySource(position, side, asItemHandler(tile, side)))
       case _ => world.getEntitiesOfClass(classOf[Entity], position.bounds)
         .filter(e => e.isAlive && e.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).isPresent)
-        .map(_.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).orElse(null))
-        .find(_ != null)
+        .map(a => EntityInventorySource(a, side, a.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side).orElse(null)))
+        .find(a => a != null && a.inventory != null)
     }
     case _ => None
   }
 
-  def anyInventoryAt(position: BlockPosition): Option[IItemHandler] = {
+  /**
+   * Retrieves an actual inventory implementation for a specified world coordinate.
+   */
+  def inventoryAt(position: BlockPosition, side: Direction): Option[IItemHandler] = inventorySourceAt(position, side)
+    .map(a => a.inventory)
+
+  def anyInventorySourceAt(position: BlockPosition): Option[InventorySource] = {
     for(side <- null :: Direction.values.toList) {
-      inventoryAt(position, side) match {
-        case inv: Some[IItemHandler] => return inv
+      inventorySourceAt(position, side) match {
+        case inv: Some[InventorySource] => return inv
         case _ =>
       }
     }
     None
   }
+
+  def anyInventoryAt(position: BlockPosition): Option[IItemHandler] = anyInventorySourceAt(position)
+    .map(a => a.inventory)
 
   /**
    * Inserts a stack into an inventory.
@@ -116,9 +122,9 @@ object InventoryUtils {
    * <br>
    * Only tries to extract from the specified slot. This <em>can</em> be used
    * to empty a slot. It will extract items using the specified consumer method
-   * which is called with the extracted stack before the stack in the inventory
-   * that we extract from is cleared from. This allows placing back excess
-   * items with as few inventory updates as possible.
+   * which is called with the extracted stack and a simulation flag before the
+   * stack in the inventory that we extract from is cleared from. This allows
+   * placing back excess items with as few inventory updates as possible.
    * <br>
    * The consumer is the only way to retrieve the actually extracted stack. It
    * is called with a separate stack instance, so it does not have to be copied
@@ -135,28 +141,32 @@ object InventoryUtils {
    * also be achieved by a check in the consumer, but it saves some unnecessary
    * code repetition this way.
    */
-  def extractFromInventorySlot(consumer: ItemStack => Unit, inventory: IItemHandler, slot: Int, limit: Int = 64): Int = {
+  def extractFromInventorySlot(consumer: (ItemStack, Boolean) => Unit, inventory: IItemHandler, slot: Int, limit: Int = 64): Int = {
     val stack = inventory.getStackInSlot(slot)
     if (stack.isEmpty || limit <= 0 || stack.getCount <= 0)
       return 0
-    var amount = stack.getMaxStackSize min stack.getCount  min limit
+    var amount = stack.getMaxStackSize min stack.getCount min limit
     inventory.extractItem(slot, amount, true) match {
       case simExtracted: ItemStack =>
         val extracted = simExtracted.copy
         amount = extracted.getCount
-        consumer(extracted)
+        consumer(extracted, true)
         val count = (amount - extracted.getCount) max 0
         if (count > 0) inventory.extractItem(slot, count, false) match {
-          case realExtracted: ItemStack if realExtracted.getCount == count =>
-          case _ =>
-            OpenComputers.log.warn("Items may have been duplicated during inventory extraction. This means an IItemHandler instance acted differently between simulated and non-simulated extraction. Offender: " + inventory)
-        }
+          case realExtracted: ItemStack if realExtracted.getCount == count => consumer(realExtracted, false)
+          case realExtracted =>
+            OpenComputers.log.warn("An IItemHandler instance acted differently between simulated and non-simulated extraction. Offender: " + inventory)
+            // Attempt inserting the stack anyway, to minimize world-side item loss.
+            if (realExtracted != null && !realExtracted.isEmpty) {
+              consumer(realExtracted, false)
+            }
+         }
         count
       case _ => 0
     }
   }
 
-  def extractFromInventorySlot(consumer: (ItemStack) => Unit, inventory: IInventory, side: Direction, slot: Int, limit: Int): Int =
+  def extractFromInventorySlot(consumer: (ItemStack, Boolean) => Unit, inventory: IInventory, side: Direction, slot: Int, limit: Int): Int =
     extractFromInventorySlot(consumer, asItemHandler(inventory, side), slot, limit)
 
     /**
@@ -206,7 +216,7 @@ object InventoryUtils {
    * <br>
    * This returns <tt>true</tt> if at least one item was extracted.
    */
-  def extractAnyFromInventory(consumer: ItemStack => Unit, inventory: IItemHandler, limit: Int = 64): Int = {
+  def extractAnyFromInventory(consumer: (ItemStack, Boolean) => Unit, inventory: IItemHandler, limit: Int = 64): Int = {
     for (slot <- 0 until inventory.getSlots) {
       val extracted = extractFromInventorySlot(consumer, inventory, slot, limit)
       if (extracted > 0)
@@ -215,7 +225,7 @@ object InventoryUtils {
     0
   }
 
-  def extractAnyFromInventory(consumer: ItemStack => Unit, inventory: IInventory, side: Direction, limit: Int): Int =
+  def extractAnyFromInventory(consumer: (ItemStack, Boolean) => Unit, inventory: IInventory, side: Direction, limit: Int): Int =
     extractAnyFromInventory(consumer, asItemHandler(inventory, side), limit)
 
   /**
@@ -231,11 +241,13 @@ object InventoryUtils {
   def extractFromInventory(stack: ItemStack, inventory: IItemHandler, simulate: Boolean = false, exact: Boolean = true): ItemStack = {
     val remaining = stack.copy()
     for (slot <- 0 until inventory.getSlots if remaining.getCount > 0) {
-      extractFromInventorySlot(stackInInv => {
+      extractFromInventorySlot((stackInInv, simulateInsert) => {
         if (stackInInv != null && remaining.getItem == stackInInv.getItem && (!exact || haveSameItemType(remaining, stackInInv, checkNBT = true))) {
           val transferred = stackInInv.getCount min remaining.getCount
-          remaining.shrink(transferred)
-          if (!simulate) {
+          if(!simulateInsert) {
+            remaining.shrink(transferred)
+          }
+          if (simulateInsert || !simulate) {
             stackInInv.shrink(transferred)
           }
         }
@@ -260,7 +272,7 @@ object InventoryUtils {
    * Utility method for calling <tt>extractFromInventory</tt> on an inventory
    * in the world.
    */
-  def getExtractorFromInventoryAt(consumer: (ItemStack) => Unit, position: BlockPosition, side: Direction, limit: Int = 64): Extractor =
+  def getExtractorFromInventoryAt(consumer: (ItemStack, Boolean) => Unit, position: BlockPosition, side: Direction, limit: Int = 64): Extractor =
     inventoryAt(position, side) match {
       case Some(inventory) => () => extractAnyFromInventory(consumer, inventory, limit)
       case _ => null
@@ -281,7 +293,7 @@ object InventoryUtils {
    */
   def transferBetweenInventories(source: IItemHandler, sink: IItemHandler, limit: Int = 64): Int =
     extractAnyFromInventory(
-      insertIntoInventory(_, sink, limit), source, limit = limit)
+      insertIntoInventory(_, sink, limit, _), source, limit = limit)
 
   def transferBetweenInventories(source: IInventory, sourceSide: Direction, sink: IInventory, sinkSide: Option[Direction], limit: Int): Int =
     transferBetweenInventories(asItemHandler(source, sourceSide), asItemHandler(sink, sinkSide.orNull), limit)
@@ -293,10 +305,10 @@ object InventoryUtils {
     sinkSlot match {
       case Some(explicitSinkSlot) =>
         extractFromInventorySlot(
-          insertIntoInventorySlot(_, sink, explicitSinkSlot, limit), source, sourceSlot, limit = limit)
+          insertIntoInventorySlot(_, sink, explicitSinkSlot, limit, _), source, sourceSlot, limit = limit)
       case _ =>
         extractFromInventorySlot(
-          insertIntoInventory(_, sink, limit), source, sourceSlot, limit = limit)
+          insertIntoInventory(_, sink, limit, _), source, sourceSlot, limit = limit)
     }
 
   def transferBetweenInventoriesSlots(source: IInventory, sourceSide: Direction, sourceSlot: Int, sink: IInventory, sinkSide: Option[Direction], sinkSlot: Option[Int], limit: Int): Int =
@@ -411,3 +423,10 @@ object InventoryUtils {
     case _ => null
   }
 }
+
+sealed trait InventorySource {
+  def side: Direction
+  def inventory: IItemHandler
+}
+final case class BlockInventorySource(position: BlockPosition, side: Direction, inventory: IItemHandler) extends InventorySource
+final case class EntityInventorySource(entity: Entity, side: Direction, inventory: IItemHandler) extends InventorySource

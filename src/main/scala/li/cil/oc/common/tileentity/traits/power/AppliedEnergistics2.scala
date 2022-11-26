@@ -26,6 +26,24 @@ trait AppliedEnergistics2 extends Common with IGridHost {
 
   // 'Manual' lazy val, because lazy vals mess up the class loader, leading to class not found exceptions.
   private var node: Option[AnyRef] = None
+  private var gridNodeStateUpdateRequested: Boolean = false
+
+  def requestGridNodeStateUpdate(): Unit = {
+    if (!gridNodeStateUpdateRequested) {
+      EventHandler.AE2.scheduleAE2Add(this)
+      gridNodeStateUpdateRequested = true
+    }
+  }
+
+  def updateGridNodeState(): Unit = {
+    if (!this.isRemoved) {
+      val gridNode = getGridNode(AEPartLocation.INTERNAL)
+      if (gridNode != null) {
+        gridNode.updateState()
+        gridNodeStateUpdateRequested = false
+      }
+    }
+  }
 
   override def updateEntity() {
     super.updateEntity()
@@ -50,7 +68,7 @@ trait AppliedEnergistics2 extends Common with IGridHost {
 
   override def clearRemoved() {
     super.clearRemoved()
-    if (useAppliedEnergistics2Power) EventHandler.AE2.scheduleAE2Add(this)
+    if (useAppliedEnergistics2Power) requestGridNodeStateUpdate()
   }
 
   override def setRemoved() {
@@ -79,10 +97,7 @@ trait AppliedEnergistics2 extends Common with IGridHost {
       return
     super.setLevelAndPosition(worldIn, pos)
     if (worldIn != null && isServer && useAppliedEnergistics2Power) {
-      val gridNode = getGridNode(AEPartLocation.INTERNAL)
-      if (gridNode != null) {
-        gridNode.updateState()
-      }
+      requestGridNodeStateUpdate()
     }
   }
 

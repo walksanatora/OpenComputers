@@ -50,7 +50,7 @@ trait InventoryWorldControlMk2 extends InventoryAware with WorldAware with SideR
     val fromSide = args.optSideAny(3, facing.getOpposite)
     withInventory(position.offset(facing), fromSide, inventory => {
       val slot = args.checkSlot(inventory, 1)
-      val extracted = InventoryUtils.extractFromInventorySlot(InventoryUtils.insertIntoInventory(_, InventoryUtils.asItemHandler(this.inventory), slots = Option(insertionSlots)), inventory, slot, count)
+      val extracted = InventoryUtils.extractFromInventorySlot((is, sim) => InventoryUtils.insertIntoInventory(is, InventoryUtils.asItemHandler(this.inventory), slots = Option(insertionSlots), simulate = sim), inventory, slot, count)
       if (extracted > 0) {
         context.pause(Settings.get.suckDelay)
         result(extracted)
@@ -60,8 +60,8 @@ trait InventoryWorldControlMk2 extends InventoryAware with WorldAware with SideR
   }
 
   private def withInventory(blockPos: BlockPosition, fromSide: Direction, f: IItemHandler => Array[AnyRef]) =
-    InventoryUtils.inventoryAt(blockPos, fromSide) match {
-      case Some(inventory) if mayInteract(blockPos, fromSide) => f(inventory)
+    InventoryUtils.inventorySourceAt(blockPos, fromSide) match {
+      case Some(inventory) if mayInteract(inventory) => f(inventory.inventory)
       case _ => result((), "no inventory")
     }
 }
