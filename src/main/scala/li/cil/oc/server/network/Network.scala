@@ -583,6 +583,7 @@ object Network extends api.detail.NetworkAPI {
         nbt.get("data" + i) match {
           case tag: ByteNBT => Boolean.box(tag.getAsByte == 1)
           case tag: IntNBT => Int.box(tag.getAsInt)
+          case tag: LongNBT => Long.box(tag.getAsLong)
           case tag: DoubleNBT => Double.box(tag.getAsDouble)
           case tag: StringNBT => tag.getAsString: AnyRef
           case tag: ByteArrayNBT => tag.getAsByteArray
@@ -717,6 +718,7 @@ object Network extends api.detail.NetworkAPI {
           case _: java.lang.Byte => 4
           case _: java.lang.Short => 4
           case _: java.lang.Integer => 4
+          case _: java.lang.Long => 8
           case _: java.lang.Float => 8
           case _: java.lang.Double => 8
           case value: java.lang.String => value.length max 1
@@ -740,6 +742,7 @@ object Network extends api.detail.NetworkAPI {
         case null | ResultWrapper.unit | None =>
         case value: java.lang.Boolean => nbt.putBoolean("data" + i, value)
         case value: java.lang.Integer => nbt.putInt("data" + i, value)
+        case value: java.lang.Long => nbt.putLong("data" + i, value)
         case value: java.lang.Double => nbt.putDouble("data" + i, value)
         case value: java.lang.String => nbt.putString("data" + i, value)
         case value: Array[Byte] => nbt.putByteArray("data" + i, value)

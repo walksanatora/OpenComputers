@@ -81,9 +81,6 @@ object ExtendedLuaState {
       }
       // Bring table back to top (in case memo values were pushed).
       lua.pushValue(tableIndex)
-      lua.pushString("n")
-      lua.pushInteger(count)
-      lua.rawSet(-3)
     }
 
     def pushTable(obj: Any, map: Map[_, _], memo: util.IdentityHashMap[Any, Int]) {

@@ -51,6 +51,7 @@ class Settings(val config: Config) {
       (-1.0, -1.0)
   }
   val enableNanomachinePfx = config.getBoolean("client.enableNanomachinePfx")
+  val transposerFluidTransferRate = config.getInt("misc.transposerFluidTransferRate")
 
   // ----------------------------------------------------------------------- //
   // computer
@@ -301,6 +302,8 @@ class Settings(val config: Config) {
   // internet
   val httpEnabled = config.getBoolean("internet.enableHttp")
   val httpHeadersEnabled = config.getBoolean("internet.enableHttpHeaders")
+  val httpMethodsEnabled = config.getStringList("internet.enableHttpMethods")
+  val httpRedirectsEnabled = config.getInt("internet.enableHttpRedirects") max -1
   val tcpEnabled = config.getBoolean("internet.enableTcp")
   val httpHostBlacklist = config.getStringList("internet.blacklist").asScala.map(new Settings.AddressValidator(_)).toArray
   val httpHostWhitelist = config.getStringList("internet.whitelist").asScala.map(new Settings.AddressValidator(_)).toArray
@@ -442,7 +445,8 @@ class Settings(val config: Config) {
   val limitMemory = !config.getBoolean("debug.disableMemoryLimit")
   val forceCaseInsensitive = config.getBoolean("debug.forceCaseInsensitiveFS")
   val logFullLibLoadErrors = config.getBoolean("debug.logFullNativeLibLoadErrors")
-  val forceNativeLib = config.getString("debug.forceNativeLibWithName")
+  val forceNativeLibPlatform = config.getString("debug.forceNativeLibPlatform")
+  val forceNativeLibPathFirst = config.getString("debug.forceNativeLibPathFirst")
   val logOpenGLErrors = config.getBoolean("debug.logOpenGLErrors")
   val logHexFontErrors = config.getBoolean("debug.logHexFontErrors")
   val alwaysTryNative = config.getBoolean("debug.alwaysTryNative")
@@ -521,7 +525,7 @@ object Settings {
       catch {
         case e: Throwable =>
           if (file.exists()) {
-            OpenComputers.log.warn("Failed loading config, using defaults.", e)
+            throw new RuntimeException("Error parsing configuration file. To restore defaults, delete '" + file.getName + "' and restart the game.", e)
           }
           settings = new Settings(defaults.getConfig("opencomputers"))
           defaults

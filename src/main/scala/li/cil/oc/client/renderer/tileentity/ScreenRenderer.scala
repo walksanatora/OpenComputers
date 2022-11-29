@@ -82,7 +82,10 @@ class ScreenRenderer(dispatch: TileEntityRendererDispatcher) extends TileEntityR
     RenderState.checkError(getClass.getName + ".render: fade")
 
     if (screen.buffer.isRenderingEnabled) {
+      val profiler = Minecraft.getInstance.getProfiler
+      profiler.push("opencomputers:screen_text")
       draw(stack, alpha, buffer)
+      profiler.pop()
     }
 
     stack.popPose()

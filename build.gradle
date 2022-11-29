@@ -224,6 +224,13 @@ dependencies {
         exclude module: "CBMultipart"
     }
 
+    provided fg.deobf("mrtjp:ProjectRed:${config.projred.version}:integration") {
+        exclude module: "NotEnoughItems"
+        exclude module: "CodeChickenLib"
+        exclude module: "jei_1.12"
+        exclude module: "ForgeMultipart"
+    }
+
     embedded name: 'OC-LuaJ', version: '20220907.1', ext: 'jar'
     embedded name: 'OC-JNLua', version: '20220928.1', ext: 'jar'
     embedded name: 'OC-JNLua-Natives', version: '20220928.1', ext: 'jar'

@@ -59,9 +59,7 @@ object ScalaClosure {
   }
 
   def toLuaList(value: Iterable[Any]): LuaValue = {
-    val table = LuaValue.listOf(value.map(toLuaValue).toArray)
-    table.set("n", table.length())
-    table
+    LuaValue.listOf(value.map(toLuaValue).toArray)
   }
 
   def toLuaTable[K, V](value: Map[K, V]): LuaValue = {
