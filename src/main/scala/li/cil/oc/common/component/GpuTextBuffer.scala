@@ -31,7 +31,7 @@ class GpuTextBuffer(val owner: String, val id: Int, val data: li.cil.oc.util.Tex
   override def onBufferSet(col: Int, row: Int, s: String, vertical: Boolean): Unit = dirty = true
   override def onBufferColorChange(): Unit = dirty = true
   override def onBufferCopy(col: Int, row: Int, w: Int, h: Int, tx: Int, ty: Int): Unit = dirty = true
-  override def onBufferFill(col: Int, row: Int, w: Int, h: Int, c: Char): Unit = dirty = true
+  override def onBufferFill(col: Int, row: Int, w: Int, h: Int, c: Int): Unit = dirty = true
 
   override def loadData(nbt: CompoundNBT): Unit = {
     // the data is initially dirty because other devices don't know about it yet

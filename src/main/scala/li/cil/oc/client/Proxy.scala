@@ -26,15 +26,11 @@ import li.cil.oc.common.event.RackMountableRenderHandler
 import li.cil.oc.common.tileentity
 import li.cil.oc.util.Audio
 import net.minecraft.block.Block
-import net.minecraft.client.Minecraft
-import net.minecraft.client.entity.player.ClientPlayerEntity
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.client.renderer.entity.{EntityRenderer, EntityRendererManager}
 import net.minecraft.item.Item
 import net.minecraft.world.World
 import net.minecraftforge.common.MinecraftForge
-import net.minecraftforge.fml.client.registry.ClientRegistry
-import net.minecraftforge.fml.client.registry.RenderingRegistry
+import net.minecraftforge.fml.client.registry.{ClientRegistry, IRenderFactory, RenderingRegistry}
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.network.NetworkRegistry
 
@@ -60,7 +56,9 @@ private[oc] class Proxy extends CommonProxy {
 
       ColorHandler.init()
 
-      RenderingRegistry.registerEntityRenderingHandler(EntityTypes.DRONE, DroneRenderer)
+      RenderingRegistry.registerEntityRenderingHandler(EntityTypes.DRONE, new IRenderFactory[Drone] {
+        override def createRenderFor(manager: EntityRendererManager): EntityRenderer[_ >: Drone] = new DroneRenderer(manager)
+      })
 
       ClientRegistry.bindTileEntityRenderer(tileentity.TileEntityTypes.ADAPTER, AdapterRenderer)
       ClientRegistry.bindTileEntityRenderer(tileentity.TileEntityTypes.ASSEMBLER, AssemblerRenderer)

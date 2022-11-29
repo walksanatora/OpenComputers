@@ -46,4 +46,13 @@ trait WorldTankAnalytics extends WorldAware with SideRestricted {
     }
   }
   else result((), "not enabled in config")
+
+  @Callback(doc = """function(side:number):number -- Get the number of tanks available on the specified side.""")
+  def getTankCount(context: Context, args: Arguments): Array[AnyRef] = {
+    val facing = checkSideForAction(args, 0)
+    FluidUtils.fluidHandlerAt(position.offset(facing), facing.getOpposite) match {
+      case Some(handler) if handler.getTanks > 0 => result(handler.getTanks)
+      case _ => result((), "no tank")
+    }
+  }
 }

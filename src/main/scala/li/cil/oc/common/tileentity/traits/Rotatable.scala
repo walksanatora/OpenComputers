@@ -26,8 +26,8 @@ trait Rotatable extends RotationAware with internal.Rotatable {
   // Accessors
   // ----------------------------------------------------------------------- //
 
-  def pitch = if (getLevel != null && getLevel.isLoaded(getBlockPos)) getBlockState.getBlock match {
-    case rotatable if getLevel.getBlockState(getBlockPos).getProperties.contains(PropertyRotatable.Pitch) => getLevel.getBlockState(getBlockPos).getValue(PropertyRotatable.Pitch)
+  def pitch = if (getLevel != null && getLevel.isLoaded(getBlockPos)) getLevel.getBlockState(getBlockPos) match {
+    case rotatable if rotatable.getProperties.contains(PropertyRotatable.Pitch) => rotatable.getValue(PropertyRotatable.Pitch)
     case _ => Direction.NORTH
   } else null
 
@@ -37,9 +37,9 @@ trait Rotatable extends RotationAware with internal.Rotatable {
       case _ => Direction.NORTH
     }, yaw)
 
-  def yaw = if (getLevel != null && getLevel.isLoaded(getBlockPos)) getBlockState.getBlock match {
-    case rotatable if getLevel.getBlockState(getBlockPos).getProperties.contains(PropertyRotatable.Yaw) => getLevel.getBlockState(getBlockPos).getValue(PropertyRotatable.Yaw)
-    case rotatable if getLevel.getBlockState(getBlockPos).getProperties.contains(PropertyRotatable.Facing) => getLevel.getBlockState(getBlockPos).getValue(PropertyRotatable.Facing)
+  def yaw = if (getLevel != null && getLevel.isLoaded(getBlockPos)) getLevel.getBlockState(getBlockPos) match {
+    case rotatable if rotatable.getProperties.contains(PropertyRotatable.Yaw) => rotatable.getValue(PropertyRotatable.Yaw)
+    case rotatable if rotatable.getProperties.contains(PropertyRotatable.Facing) => rotatable.getValue(PropertyRotatable.Facing)
     case _ => Direction.SOUTH
   } else null
 

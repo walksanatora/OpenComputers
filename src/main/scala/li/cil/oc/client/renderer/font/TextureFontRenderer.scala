@@ -5,9 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.IVertexBuilder
 import li.cil.oc.Settings
 import li.cil.oc.client.renderer.RenderTypes
-import li.cil.oc.util.PackedColor
-import li.cil.oc.util.RenderState
-import li.cil.oc.util.TextBuffer
+import li.cil.oc.util.{ExtendedUnicodeHelper, PackedColor, RenderState, TextBuffer}
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.IRenderTypeBuffer
 import net.minecraft.util.math.vector.Matrix4f
@@ -34,6 +32,12 @@ abstract class TextureFontRenderer {
     */
   def generateChars(chars: Array[Char]) {
     RenderSystem.enableTexture()
+    for (char <- chars) {
+      generateChar(char)
+    }
+  }
+
+  def generateChars(chars: Array[Int]) {
     for (char <- chars) {
       generateChar(char)
     }
@@ -92,6 +96,8 @@ abstract class TextureFontRenderer {
   }
 
   def drawString(stack: MatrixStack, s: String, x: Int, y: Int): Unit = {
+    val sLength = ExtendedUnicodeHelper.length(s)
+
     stack.pushPose()
     RenderState.pushAttrib()
 
@@ -103,13 +109,15 @@ abstract class TextureFontRenderer {
       bindTexture(i)
       GL11.glBegin(GL11.GL_QUADS)
       var tx = 0f
-      for (n <- 0 until s.length) {
-        val ch = s.charAt(n)
+      var cx = 0
+      for (n <- 0 until sLength) {
+        val ch = s.codePointAt(cx)
         // Don't render whitespace.
         if (ch != ' ') {
           drawChar(stack.last.pose, tx, 0, ch)
         }
         tx += charWidth
+        cx = s.offsetByCodePoints(cx, 1)
       }
       GL11.glEnd()
     }
@@ -129,11 +137,11 @@ abstract class TextureFontRenderer {
 
   protected def selectType(index: Int): RenderType
 
-  protected def generateChar(char: Char): Unit
+  protected def generateChar(char: Int): Unit
 
-  protected def drawChar(matrix: Matrix4f, tx: Float, ty: Float, char: Char): Unit
+  protected def drawChar(matrix: Matrix4f, tx: Float, ty: Float, char: Int): Unit
 
-  protected def drawChar(builder: IVertexBuilder, matrix: Matrix4f, color: Int, tx: Float, ty: Float, char: Char): Unit
+  protected def drawChar(builder: IVertexBuilder, matrix: Matrix4f, color: Int, tx: Float, ty: Float, char: Int): Unit
 
   private def drawQuad(builder: IVertexBuilder, matrix: Matrix4f, color: Int, x: Int, y: Int, width: Int) = if (color != 0 && width > 0) {
     val x0 = x * charWidth

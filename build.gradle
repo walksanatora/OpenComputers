@@ -104,7 +104,7 @@ task replaceSourceTokensScala(type: Sync) {
     from sourceSets.main.scala
     filteringCharset = 'UTF-8'
     filter { line -> line
-            .replaceAll('@VERSION@', project.simpleVersion) }
+            .replaceAll('@VERSION@', "${mod_version}") }
     into "$buildDir/srcReplaced/scala"
 }
 
@@ -228,31 +228,25 @@ dependencies {
     embedded name: 'OC-JNLua', version: '20220928.1', ext: 'jar'
     embedded name: 'OC-JNLua-Natives', version: '20220928.1', ext: 'jar'
 
+    testImplementation("org.mockito:mockito-all:1.10.19")
+
     provided fg.deobf("codechicken:EnderStorage:${config.enderstorage.version}:universal")
 }
 
 processResources {
     def reducedScorgeVer = config.scorge.version.replaceAll(/(\d+\.\d+)(\.\d+)/, "\$1")
 
-    inputs.property "version", project.simpleVersion
+    inputs.property "version", "${mod_version}"
     inputs.property "mcversion", config.minecraft.version
     inputs.property "sversion", reducedScorgeVer
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(sourceSets.main.resources.srcDirs) {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        include 'META-INF/mods.toml'
-        expand 'version':mod_version, 'mcversion':config.minecraft.version, 'sversion':reducedScorgeVer
+    filesMatching(['META-INF/mods.toml']) {
+        expand 'version':"${mod_version}", 'mcversion':config.minecraft.version, 'sversion':reducedScorgeVer
     }
-    from(sourceSets.main.resources.srcDirs) {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        include 'application.conf'
+    filesMatching(['application.conf']) {
         filter { line ->
-            line.replaceAll("@VERSION@", mod_version)
+            line.replaceAll("@VERSION@", "${mod_version}")
         }
-    }
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
-        exclude 'application.conf'
     }
 }
 

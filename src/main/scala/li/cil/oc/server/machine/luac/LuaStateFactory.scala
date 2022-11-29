@@ -22,10 +22,11 @@ import scala.util.Random
 
 object LuaStateFactory {
   def isAvailable: Boolean = {
-    // Force initialization of both.
+    // Force initialization of all.
     val lua52 = Lua52.isAvailable
     val lua53 = Lua53.isAvailable
-    lua52 || lua53
+    val lua54 = Lua54.isAvailable
+    lua52 || lua53 || lua54
   }
 
   def luajRequested: Boolean = Settings.get.forceLuaJ || Settings.get.registerLuaJArchitecture
@@ -35,6 +36,8 @@ object LuaStateFactory {
   def include52: Boolean = Lua52.isAvailable && !Settings.get.forceLuaJ
 
   def include53: Boolean = Lua53.isAvailable && Settings.get.enableLua53 && !Settings.get.forceLuaJ
+
+  def include54: Boolean = Lua54.isAvailable && Settings.get.enableLua54 && !Settings.get.forceLuaJ
 
   def default53: Boolean = include53 && Settings.get.defaultLua53
 
@@ -87,6 +90,24 @@ object LuaStateFactory {
     }
   }
 
+  object Lua54 extends LuaStateFactory {
+    override def version: String = "54"
+
+    override protected def create(maxMemory: Option[Int]) = maxMemory.fold(new jnlua.LuaStateFiveFour())(new jnlua.LuaStateFiveFour(_))
+
+    override protected def openLibs(state: jnlua.LuaState): Unit = {
+      state.openLib(jnlua.LuaState.Library.BASE)
+      state.openLib(jnlua.LuaState.Library.COROUTINE)
+      state.openLib(jnlua.LuaState.Library.DEBUG)
+      state.openLib(jnlua.LuaState.Library.ERIS)
+      state.openLib(jnlua.LuaState.Library.MATH)
+      state.openLib(jnlua.LuaState.Library.STRING)
+      state.openLib(jnlua.LuaState.Library.TABLE)
+      state.openLib(jnlua.LuaState.Library.UTF8)
+      state.pop(8)
+    }
+  }
+
 }
 
 /**
@@ -110,6 +131,7 @@ abstract class LuaStateFactory {
 
   private val libraryName = {
     if (!Strings.isNullOrEmpty(Settings.get.forceNativeLib)) Settings.get.forceNativeLib
+
     else {
       val libExtension = {
         if (SystemUtils.IS_OS_MAC) ".dylib"
@@ -117,30 +139,26 @@ abstract class LuaStateFactory {
         else ".so"
       }
 
-      val platformName = {
-        val systemName = {
-          if (SystemUtils.IS_OS_FREE_BSD) "freebsd"
-          else if (SystemUtils.IS_OS_NET_BSD) "netbsd"
-          else if (SystemUtils.IS_OS_OPEN_BSD) "openbsd"
-          else if (SystemUtils.IS_OS_SOLARIS) "solaris"
-          else if (SystemUtils.IS_OS_LINUX) "linux"
-          else if (SystemUtils.IS_OS_MAC) "darwin"
-          else if (SystemUtils.IS_OS_WINDOWS) "windows"
-          else "unknown"
-        }
-
-        val archName = {
-          if (Architecture.IS_OS_ARM64) "aarch64"
-          else if (Architecture.IS_OS_ARM) "arm"
-          else if (Architecture.IS_OS_X64) "x86_64"
-          else if (Architecture.IS_OS_X86) "x86"
-          else "unknown"
-        }
-
-        systemName + "-" + archName
+      val systemName = {
+        if (SystemUtils.IS_OS_FREE_BSD) "freebsd"
+        else if (SystemUtils.IS_OS_NET_BSD) "netbsd"
+        else if (SystemUtils.IS_OS_OPEN_BSD) "openbsd"
+        else if (SystemUtils.IS_OS_SOLARIS) "solaris"
+        else if (SystemUtils.IS_OS_LINUX) "linux"
+        else if (SystemUtils.IS_OS_MAC) "darwin"
+        else if (SystemUtils.IS_OS_WINDOWS) "windows"
+        else "unknown"
       }
 
-      "libjnlua" + version + "-" + platformName + libExtension
+      val archName = {
+        if (Architecture.IS_OS_ARM64) "aarch64"
+        else if (Architecture.IS_OS_ARM) "arm"
+        else if (Architecture.IS_OS_X64) "x86_64"
+        else if (Architecture.IS_OS_X86) "x86"
+        else "unknown"
+      }
+
+      "libjnlua" + version + "-" + systemName + "-" + archName + libExtension
     }
   }
 
@@ -176,7 +194,7 @@ abstract class LuaStateFactory {
       }
     }
 
-    val libraryUrl = classOf[Machine].getResource(s"/assets/${Settings.resourceDomain}/lib//$libraryName")
+    val libraryUrl = classOf[Machine].getResource(s"/assets/${Settings.resourceDomain}/lib/$libraryName")
     if (libraryUrl == null) {
       OpenComputers.log.warn(s"Native library with name '$version/$libraryName' not found.")
       return
@@ -289,7 +307,7 @@ abstract class LuaStateFactory {
     catch {
       case t: Throwable =>
         if (Settings.get.logFullLibLoadErrors) {
-          OpenComputers.log.trace(s"Could not load native library '${tmpLibFile.getName}'.", t)
+          OpenComputers.log.warn(s"Could not load native library '${tmpLibFile.getName}'.", t)
         }
         else {
           OpenComputers.log.trace(s"Could not load native library '${tmpLibFile.getName}'.")
