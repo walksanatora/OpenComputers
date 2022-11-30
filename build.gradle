@@ -104,7 +104,8 @@ task replaceSourceTokensScala(type: Sync) {
     from sourceSets.main.scala
     filteringCharset = 'UTF-8'
     filter { line -> line
-            .replaceAll('@VERSION@', "${mod_version}") }
+            .replaceAll('@VERSION@', "${mod_version}")
+            .replaceAll('@MCVERSION@', "${config.minecraft.version}") }
     into "$buildDir/srcReplaced/scala"
 }
 
