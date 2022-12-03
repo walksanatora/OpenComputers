@@ -30,7 +30,7 @@ import li.cil.oc.api.prefab
 import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.api.prefab.AbstractValue
 import li.cil.oc.util.ThreadPoolFactory
-import net.minecraft.server.MinecraftServer
+import net.minecraftforge.fml.server.ServerLifecycleHooks
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.RequestBuilder
@@ -476,7 +476,7 @@ object InternetCard {
     private class RequestSender(val url: URL, val post: Option[String], val headers: Map[String, String], val method: Option[String]) extends Callable[InputStream] {
       override def call() = try {
         checkLists(InetAddress.getByName(url.getHost), url.getHost)
-        val proxy = Proxy.NO_PROXY
+        val proxy = ServerLifecycleHooks.getCurrentServer.proxy
 
         val methodStr = if (method.isDefined) method.get.toUpperCase(Locale.ROOT) else if (post.isDefined) "POST" else "GET"
         if (Settings.get.httpMethodsEnabled.nonEmpty && !Settings.get.httpMethodsEnabled.contains(methodStr)) {
