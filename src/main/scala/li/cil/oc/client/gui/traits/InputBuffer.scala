@@ -62,7 +62,7 @@ trait InputBuffer extends DisplayBuffer {
   protected def flushQueuedKey(): Unit = {
     if (hasQueuedKey) {
       hasQueuedKey = false
-      if (!pressedKeys.contains(queuedKey)) {
+      if (!pressedKeys.contains(queuedKey) || !ignoreRepeat(queuedKey)) {
         val lwjglCode = GLFWTranslator.glfwToLWJGL(queuedKey)
         if (lwjglCode > 0) {
           pressedKeys(queuedKey) = queuedChar
