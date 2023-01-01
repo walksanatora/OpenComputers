@@ -225,19 +225,8 @@ object SaveHandler {
       // Touch all externally saved data when loading, to avoid it getting
       // deleted in the next save (because the now - save time will usually
       // be larger than the time out after loading a world again).
-      if (SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_1_7)) SaveHandlerJava17Functionality.visitJava17(statePath)
-      else visitJava16()
+      SaveHandlerJava17Functionality.visitJava17(statePath)
     }
-  }
-
-  private def visitJava16() {
-    // This may run into infinite loops if there are evil symlinks.
-    // But that's really not something I'm bothered by, it's a fallback.
-    def recurse(file: File) {
-      file.setLastModified(System.currentTimeMillis())
-      if (file.exists() && file.isDirectory && file.list() != null) file.listFiles().foreach(recurse)
-    }
-    recurse(statePath)
   }
 
   @SubscribeEvent(priority = EventPriority.LOWEST)
