@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
 import li.cil.oc.api.machine.MachineHost
@@ -22,6 +21,7 @@ import net.minecraft.nbt.CompoundNBT
 import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
+import net.minecraft.world.server.ServerWorld
 import net.minecraft.world.storage.FolderName
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.eventbus.api.EventPriority
@@ -103,16 +103,19 @@ object SaveHandler {
 
   def scheduleSave(position: BlockPosition, nbt: CompoundNBT, name: String, data: Array[Byte]) {
     val world = position.world.get
-    val dimension = world.dimension.location
-    val chunk = new ChunkPos(position.x >> 4, position.z >> 4)
+    // Try to exclude wrapped/client-side worlds.
+    if (world.isInstanceOf[ServerWorld]) {
+      val dimension = world.dimension.location
+      val chunk = new ChunkPos(position.x >> 4, position.z >> 4)
 
-    // We have to save the dimension and chunk coordinates, because they are
-    // not available on load / may have changed if the computer was moved.
-    nbt.putString("dimension", dimension.toString)
-    nbt.putInt("chunkX", chunk.x)
-    nbt.putInt("chunkZ", chunk.z)
+      // We have to save the dimension and chunk coordinates, because they are
+      // not available on load / may have changed if the computer was moved.
+      nbt.putString("dimension", dimension.toString)
+      nbt.putInt("chunkX", chunk.x)
+      nbt.putInt("chunkZ", chunk.z)
 
-    scheduleSave(dimension, chunk, name, data)
+      scheduleSave(dimension, chunk, name, data)
+    }
   }
 
   private def writeNBT(save: CompoundNBT => Unit) = {
