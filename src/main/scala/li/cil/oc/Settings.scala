@@ -302,8 +302,6 @@ class Settings(val config: Config) {
   // internet
   val httpEnabled = config.getBoolean("internet.enableHttp")
   val httpHeadersEnabled = config.getBoolean("internet.enableHttpHeaders")
-  val httpMethodsEnabled = config.getStringList("internet.enableHttpMethods")
-  val httpRedirectsEnabled = config.getInt("internet.enableHttpRedirects") max -1
   val tcpEnabled = config.getBoolean("internet.enableTcp")
   val httpHostBlacklist = config.getStringList("internet.blacklist").asScala.map(new Settings.AddressValidator(_)).toArray
   val httpHostWhitelist = config.getStringList("internet.whitelist").asScala.map(new Settings.AddressValidator(_)).toArray
