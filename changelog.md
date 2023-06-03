@@ -1,13 +1,12 @@
 ## Fixes/improvements
 
-* Reverted Internet Card code to OC 1.7.7, fixing the many related regressions.
-* Fixed "number expected, got number" being displayed instead of "number has no integer representation" on Lua 5.3+.
-* Fixed math.randomseed() not working with non-integer values.
+* [#3620] Fixed OC 1.8.0+ regression involving API arguments and numbers.
 
 ## OpenOS fixes/improvements
 
-* Fixed OpenOS version number.
+* [#3371] Fix minor bug in rm.lua.
+* General minor improvements to the codebase.
 
 ## List of contributors
 
-asie
+asie, Possseidon
