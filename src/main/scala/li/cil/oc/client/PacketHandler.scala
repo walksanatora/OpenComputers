@@ -416,7 +416,7 @@ object PacketHandler extends CommonPacketHandler {
         val particleType = p.readRegistryEntry(ForgeRegistries.PARTICLE_TYPES)
         if (particleType.isInstanceOf[IParticleData]) {
           val particle = particleType.asInstanceOf[IParticleData]
-          val count = p.readUnsignedByte()
+          val count = p.readUnsignedByte() / (1 << Minecraft.getInstance.options.particles.getId())
 
           for (i <- 0 until count) {
             def rv(f: Direction => Int) = direction match {
