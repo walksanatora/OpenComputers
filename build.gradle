@@ -201,6 +201,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:hwyla-${config.hwyla.projectId}:${config.hwyla.fileId}")
     compileOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft.version}:${config.cct.version}")
     compileOnly fg.deobf("curse.maven:cofh-core-69162:4022663") /* CoFHCore */
+    compileOnly fg.deobf("curse.maven:thermal-foundation-222880:4022666") /* Thermal Foundation */
 
     provided fg.deobf("appeng:appliedenergistics2:${config.ae2.version}:api") {
         transitive = false
