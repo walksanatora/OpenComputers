@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.security.SecureRandom
 import java.util.UUID
-
 import com.google.common.net.InetAddresses
 import com.mojang.authlib.GameProfile
 import com.typesafe.config._
@@ -52,6 +51,7 @@ class Settings(val config: Config) {
       (-1.0, -1.0)
   }
   val enableNanomachinePfx = config.getBoolean("client.enableNanomachinePfx")
+  val transposerFluidTransferRate = config.getInt("misc.transposerFluidTransferRate")
 
   // ----------------------------------------------------------------------- //
   // computer
@@ -85,6 +85,7 @@ class Settings(val config: Config) {
   val allowGC = config.getBoolean("computer.lua.allowGC")
   val enableLua53 = config.getBoolean("computer.lua.enableLua53")
   val defaultLua53 = config.getBoolean("computer.lua.defaultLua53")
+  val enableLua54 = config.getBoolean("computer.lua.enableLua54")
   val ramSizes = config.getIntList("computer.lua.ramSizes").asScala.toArray match {
     case Array(tier1, tier2, tier3, tier4, tier5, tier6) =>
       Array(tier1: Int, tier2: Int, tier3: Int, tier4: Int, tier5: Int, tier6: Int)
@@ -100,7 +101,7 @@ class Settings(val config: Config) {
   val allowActivateBlocks = config.getBoolean("robot.allowActivateBlocks")
   val allowUseItemsWithDuration = config.getBoolean("robot.allowUseItemsWithDuration")
   val canAttackPlayers = config.getBoolean("robot.canAttackPlayers")
-  val limitFlightHeight = config.getInt("robot.limitFlightHeight") max 0
+  val limitFlightHeight = config.getInt("robot.limitFlightHeight") max -1
   val screwCobwebs = config.getBoolean("robot.notAfraidOfSpiders")
   val swingRange = config.getDouble("robot.swingRange")
   val useAndPlaceRange = config.getDouble("robot.useAndPlaceRange")
@@ -442,7 +443,8 @@ class Settings(val config: Config) {
   val limitMemory = !config.getBoolean("debug.disableMemoryLimit")
   val forceCaseInsensitive = config.getBoolean("debug.forceCaseInsensitiveFS")
   val logFullLibLoadErrors = config.getBoolean("debug.logFullNativeLibLoadErrors")
-  val forceNativeLib = config.getString("debug.forceNativeLibWithName")
+  val forceNativeLibPlatform = config.getString("debug.forceNativeLibPlatform")
+  val forceNativeLibPathFirst = config.getString("debug.forceNativeLibPathFirst")
   val logOpenGLErrors = config.getBoolean("debug.logOpenGLErrors")
   val logHexFontErrors = config.getBoolean("debug.logHexFontErrors")
   val alwaysTryNative = config.getBoolean("debug.alwaysTryNative")
@@ -468,7 +470,7 @@ class Settings(val config: Config) {
   val disableLocaleChanging = config.getBoolean("debug.disableLocaleChanging")
 
   // >= 1.7.4
-  val maxSignalQueueSize: Int = (if (config.hasPath("computer.maxSignalQueueSize")) config.getInt("computer.maxSignalQueueSize") else 256) min 256
+  val maxSignalQueueSize: Int = (if (config.hasPath("computer.maxSignalQueueSize")) config.getInt("computer.maxSignalQueueSize") else 256) max 256
 
   // >= 1.7.6
   val vramSizes: Array[Double] = config.getDoubleList("gpu.vramSizes").asScala.toArray match {
@@ -479,6 +481,12 @@ class Settings(val config: Config) {
   }
 
   val bitbltCost: Double = if (config.hasPath("gpu.bitbltCost")) config.getDouble("gpu.bitbltCost") else 0.5
+
+  // >= 1.8.2
+  val diskActivitySoundDelay: Int = config.getInt("misc.diskActivitySoundDelay") max -1
+  val maxNetworkClientPacketDistance: Double = config.getDouble("misc.maxNetworkClientPacketDistance") max 0
+  val maxNetworkClientEffectPacketDistance: Double = config.getDouble("misc.maxNetworkClientEffectPacketDistance") max 0
+  val maxNetworkClientSoundPacketDistance: Double = config.getDouble("misc.maxNetworkClientSoundPacketDistance") max 0
 }
 
 object Settings {
@@ -521,7 +529,7 @@ object Settings {
       catch {
         case e: Throwable =>
           if (file.exists()) {
-            OpenComputers.log.warn("Failed loading config, using defaults.", e)
+            throw new RuntimeException("Error parsing configuration file. To restore defaults, delete '" + file.getName + "' and restart the game.", e)
           }
           settings = new Settings(defaults.getConfig("opencomputers"))
           defaults
@@ -563,6 +571,10 @@ object Settings {
       "misc.maxWirelessRange",
       "misc.maxOpenPorts",
       "computer.cpuComponentCount"
+    ),
+    // Upgrading to version 1.8.0, changed meaning of limitFlightHeight value,
+    VersionRange.createFromVersionSpec("[0.0, 1.8.0)") -> Array(
+      "computer.robot.limitFlightHeight"
     )
   )
 
@@ -570,7 +582,7 @@ object Settings {
   // created by) against the current version to see if some hard changes
   // were made. If so, the new default values are copied over.
   private def patchConfig(config: Config, defaults: Config) = {
-    val modVersion = OpenComputers.get.Version
+    val modVersion = new DefaultArtifactVersion(OpenComputers.Version)
     val prefix = "opencomputers."
     val configVersion = new DefaultArtifactVersion(if (config.hasPath(prefix + "version")) config.getString(prefix + "version") else "0.0.0")
     var patched = config
@@ -596,25 +608,25 @@ object Settings {
   val cidrPattern = """(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?:/(\d{1,2}))""".r
 
   class AddressValidator(val value: String) {
-    val validator = try cidrPattern.findFirstIn(value) match {
+    val validator: (InetAddress, String) => Option[Boolean] = try cidrPattern.findFirstIn(value) match {
       case Some(cidrPattern(address, prefix)) =>
         val addr = InetAddresses.coerceToInteger(InetAddresses.forString(address))
         val mask = 0xFFFFFFFF << (32 - prefix.toInt)
         val min = addr & mask
         val max = min | ~mask
-        (inetAddress: InetAddress, host: String) => inetAddress match {
+        (inetAddress: InetAddress, host: String) => Some(inetAddress match {
           case v4: Inet4Address =>
             val numeric = InetAddresses.coerceToInteger(v4)
             min <= numeric && numeric <= max
           case _ => true // Can't check IPv6 addresses so we pass them.
-        }
+        })
       case _ =>
         val address = InetAddress.getByName(value)
-        (inetAddress: InetAddress, host: String) => host == value || inetAddress == address
+        (inetAddress: InetAddress, host: String) => Some(host == value || inetAddress == address)
     } catch {
       case t: Throwable =>
         OpenComputers.log.warn("Invalid entry in internet blacklist / whitelist: " + value, t)
-        (inetAddress: InetAddress, host: String) => true
+        (inetAddress: InetAddress, host: String) => None
     }
 
     def apply(inetAddress: InetAddress, host: String) = validator(inetAddress, host)

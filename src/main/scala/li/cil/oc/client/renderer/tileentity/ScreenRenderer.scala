@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder
 import li.cil.oc.Constants
 import li.cil.oc.Settings
 import li.cil.oc.api
+import li.cil.oc.api.detail.ItemInfo
 import li.cil.oc.client.Textures
 import li.cil.oc.client.renderer.RenderTypes
 import li.cil.oc.common.tileentity.Screen
@@ -17,6 +18,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.IRenderTypeBuffer
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
+import net.minecraft.item.ItemStack
 import net.minecraft.util.Direction
 import net.minecraft.util.Hand
 import net.minecraft.util.math.vector.Vector3f
@@ -33,11 +35,6 @@ class ScreenRenderer(dispatch: TileEntityRendererDispatcher) extends TileEntityR
   private val fadeRatio = 1.0 / (maxRenderDistanceSq - fadeDistanceSq)
 
   private var screen: Screen = null
-
-  private lazy val screens = Set(
-    api.Items.get(Constants.BlockName.ScreenTier1),
-    api.Items.get(Constants.BlockName.ScreenTier2),
-    api.Items.get(Constants.BlockName.ScreenTier3))
 
   // ----------------------------------------------------------------------- //
   // Rendering
@@ -85,7 +82,10 @@ class ScreenRenderer(dispatch: TileEntityRendererDispatcher) extends TileEntityR
     RenderState.checkError(getClass.getName + ".render: fade")
 
     if (screen.buffer.isRenderingEnabled) {
+      val profiler = Minecraft.getInstance.getProfiler
+      profiler.push("opencomputers:screen_text")
       draw(stack, alpha, buffer)
+      profiler.pop()
     }
 
     stack.popPose()
@@ -114,11 +114,19 @@ class ScreenRenderer(dispatch: TileEntityRendererDispatcher) extends TileEntityR
     stack.scale(1, -1, 1)
   }
 
+  private def isScreen(stack: ItemStack): Boolean = api.Items.get(stack) match {
+    case i: ItemInfo => i.block() match {
+      case _: li.cil.oc.common.block.Screen => true
+      case _ => false
+    }
+    case _ => false
+  }
+
   private def drawOverlay(matrix: MatrixStack, r: IVertexBuilder) = if (screen.facing == Direction.UP || screen.facing == Direction.DOWN) {
     // Show up vector overlay when holding same screen block.
     val stack = Minecraft.getInstance.player.getItemInHand(Hand.MAIN_HAND)
     if (!stack.isEmpty) {
-      if (Wrench.holdsApplicableWrench(Minecraft.getInstance.player, screen.getBlockPos) || screens.contains(api.Items.get(stack))) {
+      if (Wrench.holdsApplicableWrench(Minecraft.getInstance.player, screen.getBlockPos) || isScreen(stack)) {
         matrix.pushPose()
         transform(matrix)
         matrix.translate(screen.width / 2f - 0.5f, screen.height / 2f - 0.5f, 0.05f)

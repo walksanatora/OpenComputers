@@ -62,6 +62,9 @@ end
 
 -------------------------------------------------------------------------------
 
+local isLuaOver54 = _VERSION:match("5.4")
+local isLuaOver53 = isLuaOver54 or _VERSION:match("5.3")
+
 local function checkArg(n, have, ...)
   have = type(have)
   local function check(want, ...)
@@ -548,17 +551,27 @@ do
     return str_find_aux(s, pattern, init, false, false)
   end
 
-  local function str_gmatch(s, pattern)
+  local function str_gmatch(s, pattern, init)
     checkArg(1, s, "string")
     checkArg(2, pattern, "string")
 
     if #s < SHORT_STRING then
-      return string_gmatch(s, pattern, repl, n)
+      return string_gmatch(s, pattern, init)
+    end
+
+    local start = 0
+    if isLuaOver54 then
+      checkArg(3, init, "number", "nil")
+      if init ~= nil then
+        start = posrelat(init, #s)
+        if start < 1 then start = 0
+        elseif start > #s + 1 then start = #s + 1
+        else start = start - 1 end
+      end
     end
 
     local s = strptr(s)
     local p = strptr(pattern)
-    local start = 0
     return function()
       ms = {
         src_init = s,
@@ -792,7 +805,7 @@ sandbox = {
   tonumber = tonumber,
   tostring = tostring,
   type = type,
-  _VERSION = _VERSION:match("Luaj") and "Luaj" or _VERSION:match("5.3") and "Lua 5.3" or "Lua 5.2",
+  _VERSION = _VERSION:match("Luaj") and "Luaj" or _VERSION:match("5.4") and "Lua 5.4" or _VERSION:match("5.3") and "Lua 5.3" or "Lua 5.2",
   xpcall = function(f, msgh, ...)
     local handled = false
     checkArg(2, msgh, "function")
@@ -893,17 +906,19 @@ sandbox = {
     acos = math.acos,
     asin = math.asin,
     atan = math.atan,
-    atan2 = math.atan2,
+    atan2 = math.atan2 or math.atan, -- Deprecated in Lua 5.3
     ceil = math.ceil,
     cos = math.cos,
-    cosh = math.cosh,
+    cosh = math.cosh, -- Deprecated in Lua 5.3
     deg = math.deg,
     exp = math.exp,
     floor = math.floor,
     fmod = math.fmod,
-    frexp = math.frexp,
+    frexp = math.frexp, -- Deprecated in Lua 5.3
     huge = math.huge,
-    ldexp = math.ldexp,
+    ldexp = math.ldexp or function(a, e) -- Deprecated in Lua 5.3
+        return a*(2.0^e)
+    end,
     log = math.log,
     max = math.max,
     min = math.min,
@@ -917,13 +932,14 @@ sandbox = {
       return spcall(math.random, ...)
     end,
     randomseed = function(seed)
-      spcall(math.randomseed, seed)
+      -- math.floor(seed) emulates pre-OC 1.8.0 behaviour
+      spcall(math.randomseed, math.floor(seed))
     end,
     sin = math.sin,
-    sinh = math.sinh,
+    sinh = math.sinh, -- Deprecated in Lua 5.3
     sqrt = math.sqrt,
     tan = math.tan,
-    tanh = math.tanh,
+    tanh = math.tanh, -- Deprecated in Lua 5.3
     -- Lua 5.3.
     maxinteger = math.maxinteger,
     mininteger = math.mininteger,

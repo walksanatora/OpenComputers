@@ -125,7 +125,7 @@ trait SmartBlockModelBase extends IBakedModel {
 
   /**
     * Create the BakedQuads for a set of quads defined by the specified vertices.
-    * <p/>
+    * <br>
     * Usually used to generate the quads for a cube previously generated using makeBox().
     */
   protected def bakeQuads(box: Array[Array[Vector3d]], texture: Array[TextureAtlasSprite], color: Option[Int]): Array[BakedQuad] = {
@@ -135,7 +135,7 @@ trait SmartBlockModelBase extends IBakedModel {
 
   /**
     * Create the BakedQuads for a set of quads defined by the specified vertices.
-    * <p/>
+    * <br>
     * Usually used to generate the quads for a cube previously generated using makeBox().
     */
   protected def bakeQuads(box: Array[Array[Vector3d]], texture: Array[TextureAtlasSprite], colorRGB: Int): Array[BakedQuad] = {
@@ -177,40 +177,25 @@ trait SmartBlockModelBase extends IBakedModel {
     })
   }
 
-  // See FaceBakery#storeVertexData.
+  // See FaceBakery#fillVertex, IVertexBuilder#putBulkData and ForgeHooksClient#fillNormal.
   protected def rawData(x: Double, y: Double, z: Double, face: Direction, texture: TextureAtlasSprite, u: Float, v: Float, colorRGB: Int) = {
     val vx = (face.getStepX * 127) & 0xFF
     val vy = (face.getStepY * 127) & 0xFF
     val vz = (face.getStepZ * 127) & 0xFF
 
+    val r = (colorRGB >> 16) & 0xFF
+    val g = (colorRGB >> 8) & 0xFF
+    val b = colorRGB & 0xFF
+
     Array(
       java.lang.Float.floatToRawIntBits(x.toFloat),
       java.lang.Float.floatToRawIntBits(y.toFloat),
       java.lang.Float.floatToRawIntBits(z.toFloat),
-      getFaceShadeColor(face, colorRGB),
+      // The GL color format is RGBA (byte-order), but the conversion uses little-endian (making it ABGR).
+      0xFF000000 | b << 16 | g << 8 | r,
       java.lang.Float.floatToRawIntBits(u),
       java.lang.Float.floatToRawIntBits(v),
       0, vx | (vy << 0x08) | (vz << 0x10)
     )
-  }
-
-  // See FaceBakery.
-  protected def getFaceShadeColor(face: Direction, colorRGB: Int): Int = {
-    val brightness = getFaceBrightness(face)
-    val b = (colorRGB >> 16) & 0xFF
-    val g = (colorRGB >> 8) & 0xFF
-    val r = colorRGB & 0xFF
-    0xFF000000 | shade(r, brightness) << 16 | shade(g, brightness) << 8 | shade(b, brightness)
-  }
-
-  private def shade(value: Int, brightness: Float) = (brightness * value).toInt max 0 min 255
-
-  protected def getFaceBrightness(face: Direction): Float = {
-    face match {
-      case Direction.DOWN => 0.5f
-      case Direction.UP => 1.0f
-      case Direction.NORTH | Direction.SOUTH => 0.8f
-      case Direction.WEST | Direction.EAST => 0.6f
-    }
   }
 }

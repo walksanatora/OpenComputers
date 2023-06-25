@@ -60,16 +60,108 @@ class ArgumentsImpl(val args: Seq[AnyRef]) extends Arguments {
   }
 
   def checkInteger(index: Int) = {
-    checkIndex(index, "number")
+    checkIndex(index, "integer")
     args(index) match {
+      // TODO: The below is correct behaviour, but breaks existing OC1 code (f.e. file:read(math.huge))
+      /* case value: java.lang.Double =>
+        if (!java.lang.Double.isFinite(value) || value < java.lang.Integer.MIN_VALUE || value > java.lang.Integer.MAX_VALUE) {
+          throw intError(index, value)
+        } else {
+          value.intValue
+        }
+      case value: java.lang.Float =>
+        if (!java.lang.Float.isFinite(value) || value < java.lang.Integer.MIN_VALUE || value > java.lang.Integer.MAX_VALUE) {
+          throw intError(index, value)
+        } else {
+          value.intValue
+        }
+      case value: java.lang.Long =>
+        if (value < java.lang.Integer.MIN_VALUE || value > java.lang.Integer.MAX_VALUE) {
+          throw intError(index, value)
+        } else {
+          value.intValue
+        }
       case value: java.lang.Number => value.intValue
-      case value => throw typeError(index, value, "number")
+      */
+      case value: java.lang.Double =>
+        if (value.isNaN)
+          throw intError(index, value)
+        else if (value > java.lang.Integer.MAX_VALUE)
+          java.lang.Integer.MAX_VALUE
+        else if (value < java.lang.Integer.MIN_VALUE)
+          java.lang.Integer.MIN_VALUE
+        else
+          value.intValue
+      case value: java.lang.Float =>
+        if (value.isNaN)
+          throw intError(index, value)
+        else if (value > java.lang.Integer.MAX_VALUE)
+          java.lang.Integer.MAX_VALUE
+        else if (value < java.lang.Integer.MIN_VALUE)
+          java.lang.Integer.MIN_VALUE
+        else
+          value.intValue
+      case value: java.lang.Long =>
+        if (value > java.lang.Integer.MAX_VALUE)
+          java.lang.Integer.MAX_VALUE
+        else if (value < java.lang.Integer.MIN_VALUE)
+          java.lang.Integer.MIN_VALUE
+        else
+          value.intValue
+      case value: java.lang.Number => value.intValue
+      case value => throw typeError(index, value, "integer")
     }
   }
 
   def optInteger(index: Int, default: Int) = {
     if (!isDefined(index)) default
     else checkInteger(index)
+  }
+
+  def checkLong(index: Int) = {
+    checkIndex(index, "integer")
+    args(index) match {
+      // TODO: The below is correct behaviour, but breaks existing OC1 code (f.e. file:read(math.huge))
+      /* case value: java.lang.Double =>
+        if (!java.lang.Double.isFinite(value) || value < java.lang.Long.MIN_VALUE || value > java.lang.Long.MAX_VALUE) {
+          throw intError(index, value)
+        } else {
+          value.longValue
+        }
+      case value: java.lang.Float =>
+        if (!java.lang.Float.isFinite(value) || value < java.lang.Long.MIN_VALUE || value > java.lang.Long.MAX_VALUE) {
+          throw intError(index, value)
+        } else {
+          value.longValue
+        }
+      case value: java.lang.Number => value.longValue
+      */
+      case value: java.lang.Double =>
+        if (value.isNaN)
+          throw intError(index, value)
+        else if (value > java.lang.Long.MAX_VALUE)
+          java.lang.Long.MAX_VALUE
+        else if (value < java.lang.Long.MIN_VALUE)
+          java.lang.Long.MIN_VALUE
+        else
+          value.longValue
+      case value: java.lang.Float =>
+        if (value.isNaN)
+          throw intError(index, value)
+        else if (value > java.lang.Long.MAX_VALUE)
+          java.lang.Long.MAX_VALUE
+        else if (value < java.lang.Long.MIN_VALUE)
+          java.lang.Long.MIN_VALUE
+        else
+          value.longValue
+      case value: java.lang.Number => value.longValue
+      case value => throw typeError(index, value, "integer")
+    }
+  }
+
+  def optLong(index: Int, default: Long) = {
+    if (!isDefined(index)) default
+    else checkLong(index)
   }
 
   def checkString(index: Int) = {
@@ -146,18 +238,35 @@ class ArgumentsImpl(val args: Seq[AnyRef]) extends Arguments {
 
   def isDouble(index: Int) =
     index >= 0 && index < count && (args(index) match {
-      case value: java.lang.Float => true
-      case value: java.lang.Double => true
+      case value: java.lang.Number => true
       case _ => false
     })
 
   def isInteger(index: Int) =
     index >= 0 && index < count && (args(index) match {
-      case value: java.lang.Byte => true
-      case value: java.lang.Short => true
-      case value: java.lang.Integer => true
-      case value: java.lang.Long => true
-      case value: java.lang.Double => true
+      // TODO: The below is correct behaviour, but may break existing OC1 code
+      /* case value: java.lang.Double =>
+        java.lang.Double.isFinite(value) && value >= java.lang.Integer.MIN_VALUE && value <= java.lang.Integer.MAX_VALUE
+      case value: java.lang.Float =>
+        java.lang.Float.isFinite(value) && value >= java.lang.Integer.MIN_VALUE && value <= java.lang.Integer.MAX_VALUE
+      case value: java.lang.Long =>
+        value >= java.lang.Integer.MIN_VALUE && value <= java.lang.Integer.MAX_VALUE */
+      case value: java.lang.Double => !value.isNaN
+      case value: java.lang.Float => !value.isNaN
+      case value: java.lang.Number => true
+      case _ => false
+    })
+
+  def isLong(index: Int) =
+    index >= 0 && index < count && (args(index) match {
+      // TODO: The below is correct behaviour, but may break existing OC1 code
+      /* case value: java.lang.Double =>
+        java.lang.Double.isFinite(value) && value >= java.lang.Long.MIN_VALUE && value <= java.lang.Long.MAX_VALUE
+      case value: java.lang.Float =>
+        java.lang.Float.isFinite(value) && value >= java.lang.Long.MIN_VALUE && value <= java.lang.Long.MAX_VALUE */
+      case value: java.lang.Double => !value.isNaN
+      case value: java.lang.Float => !value.isNaN
+      case value: java.lang.Number => true
       case _ => false
     })
 
@@ -209,10 +318,18 @@ class ArgumentsImpl(val args: Seq[AnyRef]) extends Arguments {
     new IllegalArgumentException(
       s"bad argument #${index + 1} ($want expected, got ${typeName(have)})")
 
+  private def intError(index: Int, have: AnyRef) =
+    new IllegalArgumentException(
+      s"bad argument #${index + 1} (${typeName(have)} has no integer representation)")
+
   private def typeName(value: AnyRef): String = value match {
     case null | ResultWrapper.unit | None => "nil"
     case _: java.lang.Boolean => "boolean"
-    case _: java.lang.Number => "double"
+    case _: java.lang.Byte => "integer"
+    case _: java.lang.Short => "integer"
+    case _: java.lang.Integer => "integer"
+    case _: java.lang.Long => "integer"
+    case _: java.lang.Number => "number"
     case _: java.lang.String => "string"
     case _: Array[Byte] => "string"
     case value: java.util.Map[_, _] => "table"

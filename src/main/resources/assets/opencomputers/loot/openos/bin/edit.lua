@@ -202,6 +202,7 @@ end
 
 local function setCursor(nbx, nby)
   local x, y, w, h = getArea()
+  nbx, nby = math.floor(nbx), math.floor(nby)
   nby = math.max(1, math.min(#buffer, nby))
 
   local ncy = nby - scrollY
@@ -485,7 +486,7 @@ local function uncut()
   for _, line in ipairs(cutBuffer) do
     insert(line)
     enter()
-  end 
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -628,7 +629,7 @@ local function onKeyDown(char, code)
   elseif not readonly then
     if not keyboard.isControl(char) then
       insert(unicode.char(char))
-    elseif code == keyboard.keys.tab then
+    elseif unicode.char(char) == "\t" then
       insert("  ")
     end
   end

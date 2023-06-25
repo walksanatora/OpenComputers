@@ -30,6 +30,11 @@ class NativeLua53Architecture(machine: api.machine.Machine) extends NativeLuaArc
   override def factory = LuaStateFactory.Lua53
 }
 
+@Architecture.Name("Lua 5.4")
+class NativeLua54Architecture(machine: api.machine.Machine) extends NativeLuaArchitecture(machine) {
+  override def factory = LuaStateFactory.Lua54
+}
+
 abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends Architecture {
   protected def factory: LuaStateFactory
 
@@ -37,7 +42,7 @@ abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends A
 
   private[machine] var kernelMemory = 0
 
-  private[machine] val ramScale = if (factory.is64Bit) Settings.get.ramScaleFor64Bit else 1.0
+  private[machine] var ramScale: Double = 1.0
 
   private val persistence = new PersistenceAPI(this)
 
@@ -145,16 +150,16 @@ abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends A
   override def isInitialized = kernelMemory > 0
 
   override def recomputeMemory(components: java.lang.Iterable[ItemStack]) = {
-    val memory = math.ceil(memoryInBytes(components) * ramScale).toInt
+    val memoryBytes = memoryInBytes(components)
     Option(lua) match {
       case Some(l) if Settings.get.limitMemory =>
         l.setTotalMemory(Int.MaxValue)
         if (kernelMemory > 0) {
-          l.setTotalMemory(kernelMemory + memory)
+          l.setTotalMemory(kernelMemory + math.ceil(memoryBytes * ramScale).toInt)
         }
       case _ =>
     }
-    memory > 0
+    memoryBytes > 0
   }
 
   private def memoryInBytes(components: java.lang.Iterable[ItemStack]) = components.foldLeft(0.0)((acc, stack) => acc + (Option(api.Driver.driverFor(stack)) match {
@@ -309,6 +314,7 @@ abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends A
         return false
       case Some(value) => lua = value
     }
+    ramScale = if (lua.getPointerWidth >= 8) Settings.get.ramScaleFor64Bit else 1.0
 
     apis.foreach(_.initialize())
 
@@ -376,7 +382,7 @@ abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends A
 
       try lua.gc(LuaState.GcAction.COLLECT, 0) catch {
         case t: Throwable =>
-          OpenComputers.log.warn(s"Error cleaning up loaded computer @ (${machine.host.xPosition}, ${machine.host.yPosition}, ${machine.host.zPosition}). This either means the server is badly overloaded or a user created an evil __gc method, accidentally or not.")
+          OpenComputers.log.warn(s"Error cleaning up loaded computer @ ${machine.host().machinePosition()}. This either means the server is badly overloaded or a user created an evil __gc method, accidentally or not.")
           machine.crash("error in garbage collector, most likely __gc method timed out")
       }
     } catch {
@@ -414,15 +420,15 @@ abstract class NativeLuaArchitecture(val machine: api.machine.Machine) extends A
 
       try lua.gc(LuaState.GcAction.COLLECT, 0) catch {
         case t: Throwable =>
-          OpenComputers.log.warn(s"Error cleaning up loaded computer @ (${machine.host.xPosition}, ${machine.host.yPosition}, ${machine.host.zPosition}). This either means the server is badly overloaded or a user created an evil __gc method, accidentally or not.")
+          OpenComputers.log.warn(s"Error cleaning up loaded computer @ ${machine.host().machinePosition()}. This either means the server is badly overloaded or a user created an evil __gc method, accidentally or not.")
           machine.crash("error in garbage collector, most likely __gc method timed out")
       }
     } catch {
       case e: LuaRuntimeException =>
-        OpenComputers.log.warn(s"Could not persist computer @ (${machine.host.xPosition}, ${machine.host.yPosition}, ${machine.host.zPosition}).\n${e.toString}" + (if (e.getLuaStackTrace.isEmpty) "" else "\tat " + e.getLuaStackTrace.mkString("\n\tat ")))
+        OpenComputers.log.warn(s"Could not persist computer @ ${machine.host().machinePosition()}.\n${e.toString}" + (if (e.getLuaStackTrace.isEmpty) "" else "\tat " + e.getLuaStackTrace.mkString("\n\tat ")))
         nbt.remove("state")
       case e: LuaGcMetamethodException =>
-        OpenComputers.log.warn(s"Could not persist computer @ (${machine.host.xPosition}, ${machine.host.yPosition}, ${machine.host.zPosition}).\n${e.toString}")
+        OpenComputers.log.warn(s"Could not persist computer @ ${machine.host().machinePosition()}.\n${e.toString}")
         nbt.remove("state")
     }
 

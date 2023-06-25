@@ -316,7 +316,10 @@ class Machine(val host: MachineHost) extends AbstractManagedEnvironment with mac
   def convertArg(param: Any): AnyRef = {
     param match {
       case arg: java.lang.Boolean => arg
-      case arg: java.lang.Character => Double.box(arg.toDouble)
+      case arg: java.lang.Character => Integer.valueOf(arg.toInt)
+      case arg: java.lang.Byte => arg
+      case arg: java.lang.Short => arg
+      case arg: java.lang.Integer => arg
       case arg: java.lang.Long => arg
       case arg: java.lang.Number => Double.box(arg.doubleValue)
       case arg: java.lang.String => arg
@@ -459,7 +462,7 @@ class Machine(val host: MachineHost) extends AbstractManagedEnvironment with mac
     null
   }
 
-  @Callback(direct = true, doc = """function():table -- Collect information on all connected devices.""")
+  @Callback(doc = """function():table -- Collect information on all connected devices.""")
   def getDeviceInfo(context: Context, args: Arguments): Array[AnyRef] = {
     context.pause(1) // Iterating all nodes is potentially expensive, and I see no practical reason for having to call this frequently.
     Array[AnyRef](node.network.nodes.map(n => (n, n.host)).collect {
@@ -801,7 +804,7 @@ class Machine(val host: MachineHost) extends AbstractManagedEnvironment with mac
     catch {
       case t: Throwable =>
         OpenComputers.log.error(
-          s"""Unexpected error loading a state of computer at (${host.xPosition}, ${host.yPosition}, ${host.zPosition}). """ +
+          s"""Unexpected error loading a state of computer at ${host.machinePosition()}. """ +
             s"""State: ${state.headOption.fold("no state")(_.toString)}. Unless you're upgrading/downgrading across a major version, please report this! Thank you.""", t)
         close()
     }
@@ -884,7 +887,7 @@ class Machine(val host: MachineHost) extends AbstractManagedEnvironment with mac
     catch {
       case t: Throwable =>
         OpenComputers.log.error(
-          s"""Unexpected error saving a state of computer at (${host.xPosition}, ${host.yPosition}, ${host.zPosition}). """ +
+          s"""Unexpected error saving a state of computer at ${host.machinePosition()}. """ +
             s"""State: ${state.headOption.fold("no state")(_.toString)}. Unless you're upgrading/downgrading across a major version, please report this! Thank you.""", t)
     }
   })

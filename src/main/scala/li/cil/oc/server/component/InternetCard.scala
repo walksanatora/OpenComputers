@@ -13,7 +13,6 @@ import java.nio.channels.SocketChannel
 import java.util
 import java.util.UUID
 import java.util.concurrent._
-
 import li.cil.oc.Constants
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
@@ -31,7 +30,6 @@ import li.cil.oc.api.prefab
 import li.cil.oc.api.prefab.AbstractManagedEnvironment
 import li.cil.oc.api.prefab.AbstractValue
 import li.cil.oc.util.ThreadPoolFactory
-import net.minecraft.server.MinecraftServer
 import net.minecraftforge.fml.server.ServerLifecycleHooks
 
 import scala.collection.convert.ImplicitConversionsToJava._
@@ -359,10 +357,10 @@ object InternetCard {
   }
 
   def checkLists(inetAddress: InetAddress, host: String) {
-    if (Settings.get.httpHostWhitelist.length > 0 && !Settings.get.httpHostWhitelist.exists(_ (inetAddress, host))) {
+    if (Settings.get.httpHostWhitelist.length > 0 && !Settings.get.httpHostWhitelist.exists(i => i.apply(inetAddress, host).getOrElse(false))) {
       throw new FileNotFoundException("address is not whitelisted")
     }
-    if (Settings.get.httpHostBlacklist.length > 0 && Settings.get.httpHostBlacklist.exists(_ (inetAddress, host))) {
+    if (Settings.get.httpHostBlacklist.length > 0 && Settings.get.httpHostBlacklist.exists(i => i.apply(inetAddress, host).getOrElse(true))) {
       throw new FileNotFoundException("address is blacklisted")
     }
   }
@@ -473,7 +471,7 @@ object InternetCard {
     private class RequestSender(val url: URL, val post: Option[String], val headers: Map[String, String], val method: Option[String]) extends Callable[InputStream] {
       override def call() = try {
         checkLists(InetAddress.getByName(url.getHost), url.getHost)
-        val proxy = java.net.Proxy.NO_PROXY
+        val proxy = ServerLifecycleHooks.getCurrentServer.proxy
         url.openConnection(proxy) match {
           case http: HttpURLConnection => try {
             http.setDoInput(true)

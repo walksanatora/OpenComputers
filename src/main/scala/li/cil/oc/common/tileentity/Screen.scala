@@ -242,7 +242,7 @@ class Screen(selfType: TileEntityType[_ <: Screen], var tier: Int) extends TileE
           val h = buffer.getHeight
           buffer.setForegroundColor(0xFFFFFF, false)
           buffer.setBackgroundColor(0x000000, false)
-          buffer.fill(0, 0, w, h, ' ')
+          buffer.fill(0, 0, w, h, 0x20)
         }
       })
     }

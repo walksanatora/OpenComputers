@@ -2,15 +2,14 @@ package li.cil.oc.server.component.traits
 
 import li.cil.oc.OpenComputers
 import li.cil.oc.Settings
-import li.cil.oc.util.BlockPosition
+import li.cil.oc.util.{BlockInventorySource, BlockPosition, EntityInventorySource, InventorySource}
 import li.cil.oc.util.ExtendedBlock._
 import li.cil.oc.util.ExtendedWorld._
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.minecart.MinecartEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.Direction
-import net.minecraft.util.Hand
+import net.minecraft.util.{ActionResult, Direction, Hand}
 import net.minecraft.util.math.AxisAlignedBB
 import net.minecraft.util.math.BlockRayTraceResult
 import net.minecraft.util.math.shapes.ISelectionContext
@@ -37,7 +36,7 @@ trait WorldAware {
     player
   }
 
-  def mayInteract(blockPos: BlockPosition, face: Direction): Boolean = {
+  private def mayInteract(blockPos: BlockPosition, face: Direction): Boolean = {
     try {
       val trace = new BlockRayTraceResult(fakePlayer.position, face, blockPos.toBlockPos, false)
       val event = new PlayerInteractEvent.RightClickBlock(fakePlayer, Hand.MAIN_HAND, blockPos.toBlockPos, trace)
@@ -50,8 +49,24 @@ trait WorldAware {
     }
   }
 
-  def mayInteract(blockPos: BlockPosition, side: Direction, inventory: IItemHandler): Boolean = mayInteract(blockPos, side) && (inventory match {
+  private def mayInteract(entity: Entity): Boolean = {
+    try {
+      val event = new PlayerInteractEvent.EntityInteract(fakePlayer, Hand.MAIN_HAND, entity)
+      MinecraftForge.EVENT_BUS.post(event)
+      !event.isCanceled
+    } catch {
+      case t: Throwable =>
+        OpenComputers.log.warn("Some event handler threw up while checking for permission to access an entity.", t)
+        true
+    }
+  }
+
+  def mayInteract(inv: InventorySource): Boolean = (inv.inventory match {
     case inv: InvWrapper if inv.getInv != null => inv.getInv.stillValid(fakePlayer)
+    case _ => true
+  }) && (inv match {
+    case inv: BlockInventorySource => mayInteract(inv.position, inv.side)
+    case inv: EntityInventorySource => mayInteract(inv.entity)
     case _ => true
   })
 

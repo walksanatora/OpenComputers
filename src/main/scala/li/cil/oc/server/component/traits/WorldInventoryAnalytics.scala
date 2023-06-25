@@ -6,11 +6,10 @@ import li.cil.oc.api.machine.Callback
 import li.cil.oc.api.machine.Context
 import li.cil.oc.api.prefab.ItemStackArrayValue
 import li.cil.oc.server.component.result
-import li.cil.oc.util.{BlockPosition, DatabaseAccess, InventoryUtils}
+import li.cil.oc.util.{BlockInventorySource, BlockPosition, DatabaseAccess, EntityInventorySource, InventorySource, InventoryUtils, StackOption}
 import li.cil.oc.util.ExtendedWorld._
 import li.cil.oc.util.ExtendedArguments._
 import net.minecraft.block.Block
-import li.cil.oc.util.StackOption
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Direction
 import net.minecraftforge.items.IItemHandler
@@ -103,8 +102,12 @@ trait WorldInventoryAnalytics extends WorldAware with SideRestricted with Networ
       }
       case _ => None
     }
-    withInventory(facing, inventory => blockAt(position.offset(facing)) match {
-      case Some(block) => result(block.getRegistryName)
+    withInventorySource(facing, {
+      case BlockInventorySource(position, _, _) => blockAt(position) match {
+        case Some(block) => result(block.getRegistryName)
+        case _ => result((), "Unknown")
+      }
+      case EntityInventorySource(entity, _, _) => result(entity.getType.getRegistryName)
       case _ => result((), "Unknown")
     })
   }
@@ -123,9 +126,12 @@ trait WorldInventoryAnalytics extends WorldAware with SideRestricted with Networ
     withInventory(facing, inventory => store(inventory.getStackInSlot(args.checkSlot(inventory, 1))))
   }
 
-  private def withInventory(side: Direction, f: IItemHandler => Array[AnyRef]) =
-    InventoryUtils.inventoryAt(position.offset(side), side.getOpposite) match {
-      case Some(inventory) if mayInteract(position.offset(side), side.getOpposite, inventory) => f(inventory)
+  private def withInventorySource(side: Direction, f: InventorySource => Array[AnyRef]) =
+    InventoryUtils.inventorySourceAt(position.offset(side), side.getOpposite) match {
+      case Some(inventory) if mayInteract(inventory) => f(inventory)
       case _ => result((), "no inventory")
     }
+
+  private def withInventory(side: Direction, f: IItemHandler => Array[AnyRef]) =
+    withInventorySource(side, is => f(is.inventory))
 }

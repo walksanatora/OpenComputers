@@ -5,7 +5,6 @@ import java.util
 import java.util.UUID
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
-
 import com.google.common.cache.{CacheBuilder, RemovalListener, RemovalNotification}
 import com.google.common.collect.ImmutableMap
 import li.cil.oc.Constants
@@ -67,6 +66,7 @@ import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.api.distmarker.OnlyIn
 import net.minecraftforge.client.model.ModelLoader
 import net.minecraftforge.common.extensions.IForgeItem
+import net.minecraftforge.common.util.Constants.NBT
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.event.TickEvent.ClientTickEvent
 import net.minecraftforge.event.TickEvent.ServerTickEvent
@@ -505,7 +505,15 @@ object Tablet {
   // with storing context information for analyzing a block in the singleton.
   var currentlyAnalyzing: Option[(BlockPosition, Direction, Float, Float, Float)] = None
 
-  def getId(stack: ItemStack): String = {
+  def getId(stack: ItemStack): Option[String] = {
+    if (stack.hasTag && stack.getTag.contains(Settings.namespace + "tablet", NBT.TAG_STRING)) {
+      Some(stack.getTag.getString(Settings.namespace + "tablet"))
+    }
+    else None
+  }
+
+  def getOrCreateId(stack: ItemStack): String = {
+
     val data = stack.getOrCreateTag
     if (!data.contains(Settings.namespace + "tablet")) {
       data.putString(Settings.namespace + "tablet", UUID.randomUUID().toString)
@@ -562,7 +570,7 @@ object Tablet {
     private var currentHolder: PlayerEntity = _
 
     def get(stack: ItemStack, holder: PlayerEntity): TabletWrapper = {
-      val id = getId(stack)
+      val id = getOrCreateId(stack)
       cache.synchronized {
         currentStack = stack
         currentHolder = holder
@@ -645,16 +653,18 @@ object Tablet {
 
     def getWeak(stack: ItemStack): Option[TabletWrapper] = {
       val key = getId(stack)
-      val map = cache.asMap
-      if (map.containsKey(key))
-        Some(map.entrySet.find(entry => entry.getKey == key).get.getValue)
-      else
-        None
+      if (key.nonEmpty) {
+        val map = cache.asMap
+        if (map.containsKey(key))
+          Some(map.entrySet.find(entry => entry.getKey == key).get.getValue)
+      }
+
+      None
     }
 
     def get(stack: ItemStack): Option[TabletWrapper] = {
-      if (stack.hasTag && stack.getTag.contains(Settings.namespace + "tablet")) {
-        val id = stack.getTag.getString(Settings.namespace + "tablet")
+      val id = getId(stack);
+      if (id.nonEmpty) {
         cache.synchronized(Option(cache.getIfPresent(id)))
       }
       else None

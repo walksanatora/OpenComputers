@@ -1,7 +1,6 @@
 package li.cil.oc.common.block
 
 import java.util
-
 import li.cil.oc.Constants
 import li.cil.oc.Settings
 import li.cil.oc.api
@@ -51,27 +50,6 @@ class Item(value: Block, props: Properties) extends BlockItem(value, props) {
   override def getDescriptionId: String = getBlock match {
     case simple: SimpleBlock => simple.getDescriptionId
     case _ => Settings.namespace + "tile"
-  }
-
-  override def getDamage(stack: ItemStack): Int = {
-    if (api.Items.get(stack) == api.Items.get(Constants.BlockName.Cable)) {
-      if (ItemColorizer.hasColor(stack)) {
-        ItemColorizer.getColor(stack)
-      }
-      else Color.rgbValues(DyeColor.LIGHT_GRAY)
-    }
-    else super.getDamage(stack)
-  }
-
-  override def setDamage(stack: ItemStack, damage: Int): Unit = {
-    if (api.Items.get(stack) == api.Items.get(Constants.BlockName.Cable)) {
-      if(damage != Color.rgbValues(DyeColor.LIGHT_GRAY)) {
-        ItemColorizer.setColor(stack, damage)
-      } else {
-        ItemColorizer.removeColor(stack)
-      }
-    }
-    else super.setDamage(stack, damage)
   }
 
   override def placeBlock(ctx: BlockItemUseContext, newState: BlockState): Boolean = {

@@ -8,9 +8,8 @@ import java.io.DataOutputStream
 import java.io.OutputStream
 import java.util.zip.Deflater
 import java.util.zip.DeflaterOutputStream
-
 import io.netty.buffer.Unpooled
-import li.cil.oc.OpenComputers
+import li.cil.oc.{OpenComputers, Settings}
 import li.cil.oc.api.network.EnvironmentHost
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.ServerPlayerEntity
@@ -19,7 +18,9 @@ import net.minecraft.nbt.CompressedStreamTools
 import net.minecraft.nbt.CompoundNBT
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.Direction
+import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
+import net.minecraft.world.server.ServerWorld
 import net.minecraftforge.fml.network.PacketDistributor
 import net.minecraftforge.fml.server.ServerLifecycleHooks
 import net.minecraftforge.registries._
@@ -63,23 +64,60 @@ abstract class PacketBuilder(stream: OutputStream) extends DataOutputStream(stre
     }
   }
 
+  def writeMedium(v: Int) = {
+    writeByte(v & 0xFF)
+    writeByte((v >> 8) & 0xFF)
+    writeByte((v >> 16) & 0xFF)
+  }
+
   def writePacketType(pt: PacketType.Value) = writeByte(pt.id)
 
   def sendToAllPlayers() = OpenComputers.channel.send(PacketDistributor.ALL.noArg(), packet)
 
   def sendToPlayersNearEntity(e: Entity, range: Option[Double] = None): Unit = sendToNearbyPlayers(e.level, e.getX, e.getY, e.getZ, range)
 
-  def sendToPlayersNearTileEntity(t: TileEntity, range: Option[Double] = None): Unit = sendToNearbyPlayers(t.getLevel, t.getBlockPos.getX + 0.5, t.getBlockPos.getY + 0.5, t.getBlockPos.getZ + 0.5, range)
+  def sendToPlayersNearHost(host: EnvironmentHost, range: Option[Double] = None): Unit = {
+    host match {
+      case t: TileEntity => sendToPlayersNearTileEntity(t, range)
+      case _ => sendToNearbyPlayers(host.world, host.xPosition, host.yPosition, host.zPosition, range)
+    }
+  }
 
-  def sendToPlayersNearHost(host: EnvironmentHost, range: Option[Double] = None): Unit = sendToNearbyPlayers(host.world, host.xPosition, host.yPosition, host.zPosition, range)
+  def sendToPlayersNearTileEntity(t: TileEntity, range: Option[Double] = None) {
+    t.getLevel match {
+      case w: ServerWorld =>
+        val chunk = new ChunkPos(t.getBlockPos)
+
+        val manager = ServerLifecycleHooks.getCurrentServer.getPlayerList
+        var maxPacketRange = range.getOrElse((manager.getViewDistance + 1) * 16.0)
+        val maxPacketRangeConfig = Settings.get.maxNetworkClientPacketDistance
+        if (maxPacketRangeConfig > 0.0D) {
+          maxPacketRange = maxPacketRange min maxPacketRangeConfig
+        }
+        val maxPacketRangeSq = maxPacketRange * maxPacketRange
+
+        w.getChunkSource.chunkMap.getPlayers(chunk, false).forEach {
+          case player =>
+            if (player.distanceToSqr(t.getBlockPos.getX + 0.5D, t.getBlockPos.getY + 0.5D, t.getBlockPos.getZ + 0.5D) <= maxPacketRangeSq)
+              sendToPlayer(player)
+        }
+      case _ => sendToNearbyPlayers(t.getLevel, t.getBlockPos.getX + 0.5D, t.getBlockPos.getY + 0.5D, t.getBlockPos.getZ + 0.5D, range)
+    }
+  }
 
   def sendToNearbyPlayers(world: World, x: Double, y: Double, z: Double, range: Option[Double]) {
     val server = ServerLifecycleHooks.getCurrentServer
     val manager = server.getPlayerList
+
+    var maxPacketRange = range.getOrElse((manager.getViewDistance + 1) * 16.0)
+    val maxPacketRangeConfig = Settings.get.maxNetworkClientPacketDistance
+    if (maxPacketRangeConfig > 0.0D) {
+      maxPacketRange = maxPacketRange min maxPacketRangeConfig
+    }
+    val maxPacketRangeSq = maxPacketRange * maxPacketRange
+
     for (player <- manager.getPlayers if player.level == world) {
-      val playerRenderDistance = 16
-      val playerSpecificRange = range.getOrElse((manager.getViewDistance min playerRenderDistance) * 16.0)
-      if (player.distanceToSqr(x, y, z) < playerSpecificRange * playerSpecificRange) {
+      if (player.distanceToSqr(x, y, z) <= maxPacketRangeSq) {
         sendToPlayer(player)
       }
     }

@@ -25,7 +25,7 @@ class Manual(props: Properties) extends Item(props) with IForgeItem with traits.
   @OnlyIn(Dist.CLIENT)
   override def appendHoverText(stack: ItemStack, world: World, tooltip: util.List[ITextComponent], flag: ITooltipFlag) {
     super.appendHoverText(stack, world, tooltip, flag)
-    tooltip.add(new StringTextComponent(TextFormatting.DARK_GRAY.toString + "v" + OpenComputers.get.Version))
+    tooltip.add(new StringTextComponent(TextFormatting.DARK_GRAY.toString + "v" + OpenComputers.Version))
   }
 
   override def use(stack: ItemStack, world: World, player: PlayerEntity): ActionResult[ItemStack] = {

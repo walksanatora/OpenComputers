@@ -20,7 +20,7 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem
 object FluidUtils {
   /**
    * Retrieves an actual fluid handler implementation for a specified world coordinate.
-   * <p/>
+   * <br>
    * This performs special handling for in-world liquids.
    */
   def fluidHandlerAt(position: BlockPosition, side: Direction): Option[IFluidHandler] = position.world match {
@@ -43,33 +43,51 @@ object FluidUtils {
 
   /**
    * Transfers some fluid between two fluid handlers.
-   * <p/>
+   * <br>
    * This will try to extract up the specified amount of fluid from any handler,
    * then insert it into the specified sink handler. If the insertion fails, the
    * fluid will remain in the source handler.
-   * <p/>
+   * <br>
    * This returns <tt>true</tt> if some fluid was transferred.
    */
-  def transferBetweenFluidHandlers(source: IFluidHandler, sink: IFluidHandler, limit: Int = FluidAttributes.BUCKET_VOLUME): Int = {
-    val drained = source.drain(limit, FluidAction.SIMULATE)
-    if (drained == null) {
+  def transferBetweenFluidHandlers(source: IFluidHandler, sink: IFluidHandler, limit: Int = FluidAttributes.BUCKET_VOLUME, sourceTank: Int = -1): Int = {
+    var stackToDrain: FluidStack = null
+    if (sourceTank >= 0 && sourceTank < source.getTanks) {
+      stackToDrain = source.getFluidInTank(sourceTank)
+      if (stackToDrain != null && !stackToDrain.isEmpty) {
+        stackToDrain = stackToDrain.copy()
+        stackToDrain.setAmount(math.max(stackToDrain.getAmount, limit))
+      }
+    }
+
+    val drained = Option(stackToDrain) match {
+      case Some(fluidStack) => source.drain(fluidStack, FluidAction.SIMULATE)
+      case _ => source.drain(limit, FluidAction.SIMULATE)
+    }
+    if (drained == null || drained.isEmpty) {
       return 0
     }
-    val filled = sink.fill(drained, FluidAction.SIMULATE)
-    sink.fill(source.drain(filled, FluidAction.EXECUTE), FluidAction.EXECUTE)
+    val filledAmount = sink.fill(drained, FluidAction.SIMULATE)
+    if (stackToDrain != null) {
+      val filledStack = drained.copy()
+      filledStack.setAmount(filledAmount)
+      sink.fill(source.drain(filledStack, FluidAction.EXECUTE), FluidAction.EXECUTE)
+    } else {
+      sink.fill(source.drain(filledAmount, FluidAction.EXECUTE), FluidAction.EXECUTE)
+    }
   }
 
   /**
    * Utility method for calling <tt>transferBetweenFluidHandlers</tt> on handlers
    * in the world.
-   * <p/>
+   * <br>
    * This uses the <tt>fluidHandlerAt</tt> method, and therefore handles special
    * cases such as fluid blocks.
    */
-  def transferBetweenFluidHandlersAt(sourcePos: BlockPosition, sourceSide: Direction, sinkPos: BlockPosition, sinkSide: Direction, limit: Int = FluidAttributes.BUCKET_VOLUME): Int =
+  def transferBetweenFluidHandlersAt(sourcePos: BlockPosition, sourceSide: Direction, sinkPos: BlockPosition, sinkSide: Direction, limit: Int = FluidAttributes.BUCKET_VOLUME, sourceTank: Int = -1): Int =
     fluidHandlerAt(sourcePos, sourceSide).fold(0)(source =>
       fluidHandlerAt(sinkPos, sinkSide).fold(0)(sink =>
-        transferBetweenFluidHandlers(source, sink, limit)))
+        transferBetweenFluidHandlers(source, sink, limit, sourceTank)))
 
   /**
    * Lookup fluid taking into account flowing liquid blocks...
