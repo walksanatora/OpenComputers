@@ -31,6 +31,7 @@ import li.cil.oc.util.ExtendedNBT._
 import li.cil.oc.util.ExtendedWorld._
 import li.cil.oc.util.InventoryUtils
 import net.minecraft.block.Block
+import net.minecraft.block.FlowingFluidBlock
 import net.minecraft.command.CommandSource
 import net.minecraft.command.ICommandSource
 import net.minecraft.entity.item.minecart.MinecartEntity
@@ -216,7 +217,7 @@ class DebugCard(host: EnvironmentHost) extends AbstractManagedEnvironment with D
         if (block.isAir(state, world, position.toBlockPos)) {
           result(false, "air", block)
         }
-        else if (!block.isInstanceOf[IFluidBlock]) {
+        else if (block.isInstanceOf[FlowingFluidBlock] || block.isInstanceOf[IFluidBlock]) {
           val event = new BlockEvent.BreakEvent(world, position.toBlockPos, state, fakePlayer)
           MinecraftForge.EVENT_BUS.post(event)
           result(event.isCanceled, "liquid", block)
