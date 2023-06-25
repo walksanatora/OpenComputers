@@ -5,6 +5,7 @@ import li.cil.oc.Settings
 import li.cil.oc.util.{BlockInventorySource, BlockPosition, EntityInventorySource, InventorySource}
 import li.cil.oc.util.ExtendedBlock._
 import li.cil.oc.util.ExtendedWorld._
+import net.minecraft.block.FlowingFluidBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.minecart.MinecartEntity
@@ -99,7 +100,7 @@ trait WorldAware {
         if (block.isAir(state, world, blockPos.toBlockPos)) {
           (false, "air")
         }
-        else if (!block.isInstanceOf[IFluidBlock]) {
+        else if (block.isInstanceOf[FlowingFluidBlock] || block.isInstanceOf[IFluidBlock]) {
           val event = new BlockEvent.BreakEvent(world, blockPos.toBlockPos, state, fakePlayer)
           MinecraftForge.EVENT_BUS.post(event)
           (event.isCanceled, "liquid")
