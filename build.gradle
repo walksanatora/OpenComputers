@@ -137,7 +137,7 @@ repositories {
     }
     ivy {
         name 'asie dependency mirror'
-        artifactPattern "http://asie.pl/javadeps/[module]-[revision](-[classifier]).[ext]"
+        artifactPattern "https://asie.pl/javadeps/[module]-[revision](-[classifier]).[ext]"
         content {
             includeModule '', 'OC-LuaJ'
             includeModule '', 'OC-JNLua'
@@ -238,7 +238,10 @@ dependencies {
     embedded name: 'OC-JNLua', version: '20230530.0', ext: 'jar'
     embedded name: 'OC-JNLua-Natives', version: '20220928.1', ext: 'jar'
 
+    testImplementation("junit:junit:4.13")
     testImplementation("org.mockito:mockito-all:1.10.19")
+    testImplementation("org.scalactic:scalactic_2.11:2.2.6")
+    testImplementation("org.scalatest:scalatest_2.11:2.2.6")
 
     provided fg.deobf("codechicken:EnderStorage:${config.enderstorage.version}:universal")
 }

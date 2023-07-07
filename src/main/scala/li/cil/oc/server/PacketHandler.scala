@@ -267,7 +267,7 @@ object PacketHandler extends CommonPacketHandler {
       case rack: container.Rack if rack.containerId == containerId => {
         (rack.otherInventory, p.player) match {
           case (t: Rack, player: ServerPlayerEntity) if t.stillValid(player) =>
-            t.connect(mountableIndex, nodeIndex, side)
+            t.connect(mountableIndex, nodeIndex - 1, side)
           case _ =>
         }
       }
