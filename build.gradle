@@ -193,6 +193,7 @@ dependencies {
     def jeiSlug = "jei-${config.minecraft.version}"
     minecraft "net.minecraftforge:forge:${config.minecraft.version}-${config.forge.version}"
 
+    // required for tests but cannot use implementation as that would clash with scorge at runtime
     compileOnly "org.scala-lang:scala-library:2.13.4"
     implementation "net.minecraftforge:Scorge:${config.scorge.version}"
     embedded "com.typesafe:config:1.2.1"
@@ -238,10 +239,13 @@ dependencies {
     embedded name: 'OC-JNLua', version: '20230530.0', ext: 'jar'
     embedded name: 'OC-JNLua-Natives', version: '20220928.1', ext: 'jar'
 
-    testImplementation("junit:junit:4.13")
-    testImplementation("org.mockito:mockito-all:1.10.19")
-    testImplementation("org.scalactic:scalactic_2.11:2.2.6")
-    testImplementation("org.scalatest:scalatest_2.11:2.2.6")
+    testImplementation "org.scala-lang:scala-library:2.13.4"
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:3.4.0"
+    testImplementation "org.scalactic:scalactic_2.13:3.2.6"
+    testImplementation "org.scalatest:scalatest_2.13:3.2.6"
+    testImplementation "org.scalatestplus:junit-4-13_2.13:3.2.6.+"
+    testImplementation "org.scalatestplus:mockito-3-4_2.13:3.2.6.+"
 
     provided fg.deobf("codechicken:EnderStorage:${config.enderstorage.version}:universal")
 }

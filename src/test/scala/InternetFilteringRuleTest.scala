@@ -2,17 +2,17 @@ import com.typesafe.config.ConfigFactory
 import li.cil.oc.Settings
 import li.cil.oc.server.component.InternetCard
 import org.junit.runner.RunWith
-import org.scalatest.{FlatSpec, FunSpec, WordSpec}
-import org.scalatest.Matchers.{be, convertToAnyShouldWrapper}
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.mockito.MockitoSugar
 
 import java.net.InetAddress
 import scala.compat.Platform.EOL
 import scala.io.{Codec, Source}
 
 @RunWith(classOf[JUnitRunner])
-class InternetFilteringRuleTest extends FunSpec with MockitoSugar {
+class InternetFilteringRuleTest extends AnyFunSpec with MockitoSugar {
   val config = autoClose(classOf[Settings].getResourceAsStream("/application.conf")) { in =>
     val configStr = Source.fromInputStream(in)(Codec.UTF8).getLines().mkString("", EOL, EOL)
     ConfigFactory.parseString(configStr)
@@ -33,7 +33,7 @@ class InternetFilteringRuleTest extends FunSpec with MockitoSugar {
       isUriBlacklisted("http://127.0.0.1") should be(true)
       isUriBlacklisted("http://127.0.1") should be(true)
       isUriBlacklisted("http://127.1") should be(true)
-      isUriBlacklisted("http://0") should be (true)
+      isUriBlacklisted("http://0") should be(true)
     }
     it("should reject the local host in IPv6") {
       isUriBlacklisted("http://[::1]") should be(true)
