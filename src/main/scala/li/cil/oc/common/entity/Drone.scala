@@ -64,7 +64,6 @@ import net.minecraftforge.fluids.IFluidTank
 import net.minecraftforge.fml.network.NetworkHooks
 
 import scala.collection.JavaConverters.asJavaIterable
-import scala.collection.convert.ImplicitConversionsToJava._
 
 object Drone {
   val DataRunning: DataParameter[lang.Boolean] = EntityDataManager.defineId(classOf[Drone], DataSerializers.BOOLEAN)
@@ -359,7 +358,7 @@ class Drone(selfType: EntityType[Drone], world: World) extends Entity(selfType, 
 
   def globalBufferSize_=(value: Int): Unit = entityData.set(Drone.DataMaxEnergy, Int.box(value))
 
-  def statusText_=(value: String): Unit = entityData.set(Drone.DataStatusText, Option(value).fold("")(_.lines.map(_.take(10)).take(2).mkString("\n")))
+  def statusText_=(value: String): Unit = entityData.set(Drone.DataStatusText, Option(value).fold("")(_.linesIterator.map(_.take(10)).take(2).mkString("\n")))
 
   def inventorySize_=(value: Int): Unit = entityData.set(Drone.DataInventorySize, Int.box(value.toByte))
 

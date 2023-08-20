@@ -42,16 +42,16 @@ object CallbackDocHandler {
         val pages = mutable.Buffer.empty[String]
         val lastPage = callbacks.toArray.sorted.foldLeft("") {
           (last, doc) =>
-            if (last.lines.length + 2 + doc.lines.length > 12) {
+            if (last.linesIterator.length + 2 + doc.linesIterator.length > 12) {
               // We've potentially got some pretty long documentation here, split it up first
-              last.lines.grouped(12).map(_.mkString("\n")).foreach(pages += _)
+              last.linesIterator.grouped(12).map(_.mkString("\n")).foreach(pages += _)
               doc
             }
             else if (last.nonEmpty) last + "\n\n" + doc
             else doc
         }
         // The last page may be too long as well.
-        lastPage.lines.grouped(12).map(_.mkString("\n")).foreach(pages += _)
+        lastPage.linesIterator.grouped(12).map(_.mkString("\n")).foreach(pages += _)
 
         Option(pages.map(page => new CallbackDocRecipe(stack, page)))
       }
@@ -115,7 +115,7 @@ object CallbackDocHandler {
 
     override def draw(recipeWrapper: CallbackDocRecipe, stack: MatrixStack, mouseX: Double, mouseY: Double): Unit = {
       val minecraft = Minecraft.getInstance
-      for ((text, line) <- recipeWrapper.page.lines.zipWithIndex) {
+      for ((text, line) <- recipeWrapper.page.linesIterator.zipWithIndex) {
         minecraft.font.draw(stack, text, 4, 4 + line * (minecraft.font.lineHeight + 1), 0x333333)
       }
     }

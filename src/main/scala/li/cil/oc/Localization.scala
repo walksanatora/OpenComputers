@@ -19,14 +19,14 @@ object Localization {
     val k = resolveKey(formatKey)
     var lm = LanguageMap.getInstance
     if (!lm.has(k)) return k
-    String.format(lm.getOrDefault(k), values: _*).lines.map(_.trim).mkString("\n")
+    String.format(lm.getOrDefault(k), values: _*).linesIterator.map(_.trim).mkString("\n")
   }
 
   def localizeImmediately(key: String): String = {
     val k = resolveKey(key)
     var lm = LanguageMap.getInstance
     if (!lm.has(k)) return k
-    lm.getOrDefault(k).lines.map(_.trim).mkString("\n")
+    lm.getOrDefault(k).linesIterator.map(_.trim).mkString("\n")
   }
 
   object Analyzer {

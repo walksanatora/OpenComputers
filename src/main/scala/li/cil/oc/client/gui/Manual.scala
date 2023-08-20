@@ -19,7 +19,6 @@ import net.minecraft.util.text.StringTextComponent
 import org.lwjgl.glfw.GLFW
 
 import scala.collection.JavaConverters.{asJavaIterable, seqAsJavaList}
-import scala.collection.convert.ImplicitConversionsToJava._
 import scala.collection.convert.ImplicitConversionsToScala._
 
 class Manual extends screen.Screen(StringTextComponent.EMPTY) with traits.Window {
@@ -122,7 +121,7 @@ class Manual extends screen.Screen(StringTextComponent.EMPTY) with traits.Window
 
     currentSegment = Document.render(stack, document, leftPos + 8, topPos + 8, documentMaxWidth, documentMaxHeight, offset, font, mouseX, mouseY)
     def localizeAndWrap(text: String): java.util.List[_ <: ITextProperties] = {
-      val lines = Localization.localizeImmediately(text).lines.map(new StringTextComponent(_))
+      val lines = Localization.localizeImmediately(text).linesIterator.map(new StringTextComponent(_))
       seqAsJavaList(lines.toSeq)
     }
 

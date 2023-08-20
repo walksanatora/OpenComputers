@@ -44,7 +44,7 @@ class Print(props: Properties) extends RedstoneAware(props) with IForgeBlock {
   override protected def tooltipBody(stack: ItemStack, world: IBlockReader, tooltip: util.List[ITextComponent], advanced: ITooltipFlag) = {
     super.tooltipBody(stack, world, tooltip, advanced)
     val data = new PrintData(stack)
-    data.tooltip.foreach(s => tooltip.addAll(s.lines.map(new StringTextComponent(_).setStyle(Tooltip.DefaultStyle)).toIterable))
+    data.tooltip.foreach(s => tooltip.addAll(s.linesIterator.map(new StringTextComponent(_).setStyle(Tooltip.DefaultStyle)).toIterable))
   }
 
   override protected def tooltipTail(stack: ItemStack, world: IBlockReader, tooltip: util.List[ITextComponent], advanced: ITooltipFlag) = {

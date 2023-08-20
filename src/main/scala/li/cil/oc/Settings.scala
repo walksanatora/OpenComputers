@@ -567,7 +567,7 @@ object Settings {
       val nl = sys.props("line.separator")
       file.getParentFile.mkdirs()
       val out = new PrintWriter(file)
-      out.write(config.root.render(renderSettings).lines.
+      out.write(config.root.render(renderSettings).linesIterator.
         // Indent two spaces instead of four.
         map(line => """^(\s*)""".r.replaceAllIn(line, m => Regex.quoteReplacement(m.group(1).replace("  ", " ")))).
         // Finalize the string.

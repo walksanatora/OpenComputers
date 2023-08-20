@@ -244,7 +244,7 @@ class Rack(state: container.Rack, playerInventory: PlayerInventory, name: ITextC
 
     if (relayButton.isMouseOver(mouseX, mouseY)) {
       val tooltip = new java.util.ArrayList[String]
-      tooltip.addAll(asJavaCollection(Localization.Rack.RelayModeTooltip.lines.toIterable))
+      tooltip.addAll(asJavaCollection(Localization.Rack.RelayModeTooltip.linesIterator.toIterable))
       copiedDrawHoveringText(stack, tooltip, mouseX - leftPos, mouseY - topPos, font)
     }
 

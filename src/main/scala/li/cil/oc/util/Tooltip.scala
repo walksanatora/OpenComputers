@@ -31,7 +31,7 @@ object Tooltip {
       else Seq(Localization.localizeImmediately("tooltip.toolong", KeyBindings.getKeyBindingName(KeyBindings.extendedTooltip)))
     }
     else tooltip.
-      lines.
+      linesIterator.
       map(wrap(font, _, maxWidth).map(_.asInstanceOf[String].trim() + " ")).
       flatten.
       toList
@@ -41,7 +41,7 @@ object Tooltip {
     if (KeyBindings.showExtendedTooltips) {
       Localization.localizeImmediately("tooltip." + name).
         format(args.map(_.toString): _*).
-        lines.
+        linesIterator.
         map(wrap(font, _, maxWidth).map(_.asInstanceOf[String].trim() + " ")).
         flatten.
         toList
