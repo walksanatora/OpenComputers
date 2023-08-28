@@ -631,7 +631,7 @@ object Settings {
       }
 
       // Migrate filtering rules to 1.8.3+
-      if (fileringRulesPatchVersion.containsVersion(configVersion)) {
+      if (fileringRulesPatchVersion.containsVersion(configVersion) && patched.hasPath(prefix + "internet.whitelist") && patched.hasPath(prefix + "internet.blacklist")) {
         OpenComputers.log.info(s"=> Migrating Internet Card filtering rules. ")
         val cidrPattern = """(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?:/(\d{1,2}))""".r
         val httpHostWhitelist = patched.getStringList(prefix + "internet.whitelist").asScala
