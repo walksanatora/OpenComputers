@@ -150,7 +150,7 @@ class Robot(state: container.Robot, playerInventory: PlayerInventory, name: ITex
     }
     if (powerButton.isMouseOver(mouseX, mouseY)) {
       val tooltip = new java.util.ArrayList[String]
-      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.lines.toIterable else Localization.Computer.TurnOn.lines.toIterable))
+      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.linesIterator.toIterable else Localization.Computer.TurnOn.linesIterator.toIterable))
       copiedDrawHoveringText(stack, tooltip, mouseX - leftPos, mouseY - topPos, font)
     }
   }

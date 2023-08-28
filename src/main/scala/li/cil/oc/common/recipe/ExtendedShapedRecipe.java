@@ -18,7 +18,7 @@ public class ExtendedShapedRecipe implements ICraftingRecipe, IShapedRecipe<Craf
     private ShapedRecipe wrapped;
 
     public ExtendedShapedRecipe(ShapedRecipe wrapped) {
-        this.wrapped = wrapped;
+        this.wrapped = ExtendedRecipe.patchRecipe(wrapped);
     }
 
     @Override

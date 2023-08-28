@@ -57,7 +57,7 @@ abstract class UpgradeSign extends AbstractManagedEnvironment with DeviceInfo {
           case _ => FakePlayerFactory.get(host.world.asInstanceOf[ServerWorld], Settings.get.fakePlayerProfile)
         }
 
-        val lines = text.lines.padTo(4, "").map(line => if (line.length > 15) line.substring(0, 15) else line).toArray
+        val lines = text.linesIterator.padTo(4, "").map(line => if (line.length > 15) line.substring(0, 15) else line).toArray
 
         if (!canChangeSign(player, sign, lines)) {
           return result((), "not allowed")

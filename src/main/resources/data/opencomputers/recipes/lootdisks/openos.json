@@ -17,7 +17,7 @@
       "oc:lootFactory": "opencomputers:openos",
       "oc:color": 13,
       "display": {
-        "Name": "OpenOS (Operating System)"
+        "Name": "{\"text\":\"OpenOS (Operating System)\"}"
       }
     }
   }

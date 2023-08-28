@@ -17,7 +17,7 @@
       "oc:lootFactory": "opencomputers:oppm",
       "oc:color": 9,
       "display": {
-        "Name": "OPPM (Package Manager)"
+        "Name": "{\"text\":\"OPPM (Package Manager)\"}"
       }
     }
   }

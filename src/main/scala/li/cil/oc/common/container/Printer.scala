@@ -8,6 +8,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.inventory.IInventory
 import net.minecraft.inventory.container.ContainerType
+import net.minecraft.inventory.container.{Slot => BaseSlot}
 import net.minecraft.nbt.CompoundNBT
 
 class Printer(selfType: ContainerType[_ <: Printer], id: Int, playerInventory: PlayerInventory, val printer: IInventory)
@@ -27,7 +28,9 @@ class Printer(selfType: ContainerType[_ <: Printer], id: Int, playerInventory: P
       PrintData.inkValue(stack) > 0
     }
   })
-  addSlotToContainer(152, 35)
+  addSlot(new BaseSlot(otherInventory, slots.size, 152, 35) {
+    override def mayPlace(stack: ItemStack): Boolean = false
+  })
 
   // Show the player's inventory.
   addPlayerInventorySlots(8, 84)

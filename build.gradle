@@ -39,6 +39,9 @@ file "build.properties" withReader {
     prop.load(it)
     ext.config = new ConfigSlurper().parse prop
 }
+if (!project.hasProperty("mod_version")) {
+    project.ext.mod_version = config.mod.version
+}
 
 version = "${mod_version}"
 if (version.endsWith("-snapshot")) {

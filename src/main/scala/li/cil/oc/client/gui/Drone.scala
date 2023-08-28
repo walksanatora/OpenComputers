@@ -60,7 +60,7 @@ class Drone(state: container.Drone, playerInventory: PlayerInventory, name: ITex
 
   override def render(stack: MatrixStack, mouseX: Int, mouseY: Int, dt: Float) {
     powerButton.toggled = inventoryContainer.isRunning
-    bufferRenderer.dirty = inventoryContainer.statusText.lines.zipWithIndex.exists {
+    bufferRenderer.dirty = inventoryContainer.statusText.linesIterator.zipWithIndex.exists {
       case (line, i) => buffer.set(0, i, line, vertical = false)
     }
     super.render(stack, mouseX, mouseY, dt)
@@ -104,7 +104,7 @@ class Drone(state: container.Drone, playerInventory: PlayerInventory, name: ITex
     }
     if (powerButton.isMouseOver(mouseX, mouseY)) {
       val tooltip = new java.util.ArrayList[String]
-      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.lines.toIterable else Localization.Computer.TurnOn.lines.toIterable))
+      tooltip.addAll(asJavaCollection(if (inventoryContainer.isRunning) Localization.Computer.TurnOff.linesIterator.toIterable else Localization.Computer.TurnOn.linesIterator.toIterable))
       copiedDrawHoveringText(stack, tooltip, mouseX - leftPos, mouseY - topPos, font)
     }
     RenderState.popAttrib()

@@ -34,7 +34,7 @@ class FloppyDisk(props: Properties) extends Item(props) with IForgeItem with tra
       if (stack.hasTag && stack.getTag.contains(Settings.namespace + "color"))
         stack.getTag.getInt(Settings.namespace + "color")
       else
-        DyeColor.LIGHT_GRAY.getId
+        DyeColor.GRAY.getId
     modelLocationFromDyeName(DyeColor.byId(dyeIndex max 0 min 15))
   }
 
