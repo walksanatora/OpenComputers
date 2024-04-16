@@ -56,7 +56,7 @@ object FluidUtils {
       stackToDrain = source.getFluidInTank(sourceTank)
       if (stackToDrain != null && !stackToDrain.isEmpty) {
         stackToDrain = stackToDrain.copy()
-        stackToDrain.setAmount(math.max(stackToDrain.getAmount, limit))
+        stackToDrain.setAmount(math.min(stackToDrain.getAmount, limit))
       }
     }
 

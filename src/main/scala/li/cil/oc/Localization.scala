@@ -7,26 +7,20 @@ import net.minecraft.util.text.event.HoverEvent
 import scala.util.matching.Regex
 
 object Localization {
-  private def resolveKey(key: String) = if (canLocalize(Settings.namespace + key)) Settings.namespace + key else key
+  private def resolveKey(key: String) = if (canLocalize(Settings.namespace + key)) Option(Settings.namespace + key) else Option.empty
 
   def canLocalize(key: String): Boolean = LanguageMap.getInstance.has(key)
 
-  def localizeLater(formatKey: String, values: AnyRef*) = new TranslationTextComponent(resolveKey(formatKey), values: _*)
+  def localizeLater(key: String) = new TranslationTextComponent(resolveKey(key).getOrElse(key))
 
-  def localizeLater(key: String) = new TranslationTextComponent(resolveKey(key))
+  def localizeLater(key: String, values: AnyRef*) = new TranslationTextComponent(resolveKey(key).getOrElse(key), values: _*)
 
-  def localizeImmediately(formatKey: String, values: AnyRef*): String = {
-    val k = resolveKey(formatKey)
-    var lm = LanguageMap.getInstance
-    if (!lm.has(k)) return k
-    String.format(lm.getOrDefault(k), values: _*).linesIterator.map(_.trim).mkString("\n")
+  def localizeImmediately(key: String, values: AnyRef*): String = {
+    resolveKey(key).map(k => String.format(LanguageMap.getInstance.getOrDefault(k), values: _*).linesIterator.map(_.trim).mkString("\n")).getOrElse(key)
   }
 
   def localizeImmediately(key: String): String = {
-    val k = resolveKey(key)
-    var lm = LanguageMap.getInstance
-    if (!lm.has(k)) return k
-    lm.getOrDefault(k).linesIterator.map(_.trim).mkString("\n")
+    resolveKey(key).map(k => LanguageMap.getInstance.getOrDefault(k).linesIterator.map(_.trim).mkString("\n")).getOrElse(key)
   }
 
   object Analyzer {

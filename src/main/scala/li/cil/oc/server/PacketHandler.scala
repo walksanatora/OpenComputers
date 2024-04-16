@@ -3,6 +3,7 @@ package li.cil.oc.server
 import java.io.InputStream
 
 import li.cil.oc.Localization
+import li.cil.oc.OpenComputers
 import li.cil.oc.api
 import li.cil.oc.api.internal.Server
 import li.cil.oc.api.machine.Machine
@@ -30,8 +31,14 @@ import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.server.ServerLifecycleHooks
+import org.apache.logging.log4j.MarkerManager
 
 object PacketHandler extends CommonPacketHandler {
+  private val securityMarker = MarkerManager.getMarker("SuspiciousPackets")
+
+  private def logForgedPacket(player: ServerPlayerEntity) =
+    OpenComputers.log.warn(securityMarker, "Player {} tried to send GUI packets without opening them", player.getGameProfile)
+
   override protected def world(player: PlayerEntity, dimension: ResourceLocation): Option[World] =
     Option(ServerLifecycleHooks.getCurrentServer.getLevel(RegistryKey.create(Registry.DIMENSION_REGISTRY, dimension)))
 
@@ -65,20 +72,23 @@ object PacketHandler extends CommonPacketHandler {
   def onComputerPower(p: PacketParser): Unit = {
     val containerId = p.readInt()
     val setPower = p.readBoolean()
-    p.player.containerMenu match {
-      case computer: container.Case if computer.containerId == containerId => {
-        (computer.otherInventory, p.player) match {
-          case (te: Computer, player: ServerPlayerEntity) => trySetComputerPower(te.machine, setPower, player)
-          case _ =>
+    p.player match {
+      case player: ServerPlayerEntity => player.containerMenu match {
+        case computer: container.Case if computer.containerId == containerId => {
+          computer.otherInventory match {
+            case te: Computer => trySetComputerPower(te.machine, setPower, player)
+            case _ => logForgedPacket(player)
+          }
         }
-      }
-      case robot: container.Robot if robot.containerId == containerId => {
-        (robot.otherInventory, p.player) match {
-          case (te: Computer, player: ServerPlayerEntity) => trySetComputerPower(te.machine, setPower, player)
-          case _ =>
+        case robot: container.Robot if robot.containerId == containerId => {
+          robot.otherInventory match {
+            case te: Computer => trySetComputerPower(te.machine, setPower, player)
+            case _ => logForgedPacket(player)
+          }
         }
+        case _ => logForgedPacket(player)
       }
-      case _ => // Invalid packet or container closed early.
+      case _ =>
     }
   }
 
@@ -86,15 +96,21 @@ object PacketHandler extends CommonPacketHandler {
     val containerId = p.readInt()
     val index = p.readInt()
     val setPower = p.readBoolean()
-    p.player.containerMenu match {
-      case server: container.Server if server.containerId == containerId => {
-        (server.otherInventory, p.player) match {
-          case (comp: component.Server, player: ServerPlayerEntity) if comp.rack.getMountable(index) == comp =>
-            trySetComputerPower(comp.machine, setPower, player)
-          case _ => // Invalid packet.
+    p.player match {
+      case player: ServerPlayerEntity => player.containerMenu match {
+        case server: container.Server if server.containerId == containerId => {
+          server.otherInventory match {
+            case comp: component.Server => {
+              if (comp.rack != null && comp.rack.getMountable(index) == comp)
+                trySetComputerPower(comp.machine, setPower, player)
+              // else: probably just lag, not invalid packet
+            }
+            case _ => logForgedPacket(player)
+          }
         }
+        case _ => logForgedPacket(player)
       }
-      case _ => // Invalid packet or container closed early.
+      case _ =>
     }
   }
 
@@ -134,14 +150,17 @@ object PacketHandler extends CommonPacketHandler {
   def onDronePower(p: PacketParser): Unit = {
     val containerId = p.readInt()
     val power = p.readBoolean()
-    p.player.containerMenu match {
-      case drone: container.Drone if drone.containerId == containerId => {
-        (drone.otherInventory, p.player) match {
-          case (droneInv: DroneInventory, player: ServerPlayerEntity) => trySetComputerPower(droneInv.drone.machine, power, player)
-          case _ =>
+    p.player match {
+      case player: ServerPlayerEntity => player.containerMenu match {
+        case drone: container.Drone if drone.containerId == containerId => {
+          drone.otherInventory match {
+            case droneInv: DroneInventory => trySetComputerPower(droneInv.drone.machine, power, player)
+            case _ => logForgedPacket(player)
+          }
         }
+        case _ => logForgedPacket(player)
       }
-      case _ => // Invalid packet or container closed early.
+      case _ =>
     }
   }
 
@@ -263,15 +282,21 @@ object PacketHandler extends CommonPacketHandler {
     val mountableIndex = p.readInt()
     val nodeIndex = p.readInt()
     val side = p.readDirection()
-    p.player.containerMenu match {
-      case rack: container.Rack if rack.containerId == containerId => {
-        (rack.otherInventory, p.player) match {
-          case (t: Rack, player: ServerPlayerEntity) if t.stillValid(player) =>
-            t.connect(mountableIndex, nodeIndex - 1, side)
-          case _ =>
+    p.player match {
+      case player: ServerPlayerEntity => player.containerMenu match {
+        case rack: container.Rack if rack.containerId == containerId => {
+          rack.otherInventory match {
+            case t: Rack => {
+              if (t.stillValid(player))
+                t.connect(mountableIndex, nodeIndex - 1, side)
+              // else: probably just lag, not invalid packet
+            }
+            case _ => logForgedPacket(player)
+          }
         }
+        case _ => logForgedPacket(player)
       }
-      case _ => // Invalid packet or container closed early.
+      case _ =>
     }
   }
 

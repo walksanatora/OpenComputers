@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common._
 import scala.collection.JavaConverters
 
 trait AppliedEnergistics2 extends Common with IGridHost {
-  private lazy val useAppliedEnergistics2Power = isServer && Mods.AppliedEnergistics2.isModAvailable
+  private def useAppliedEnergistics2Power() = isServer && Mods.AppliedEnergistics2.isModAvailable
 
   // 'Manual' lazy val, because lazy vals mess up the class loader, leading to class not found exceptions.
   private var node: Option[AnyRef] = None
@@ -47,7 +47,7 @@ trait AppliedEnergistics2 extends Common with IGridHost {
 
   override def updateEntity() {
     super.updateEntity()
-    if (useAppliedEnergistics2Power && getLevel.getGameTime % Settings.get.tickFrequency == 0) {
+    if (useAppliedEnergistics2Power() && getLevel.getGameTime % Settings.get.tickFrequency == 0) {
       updateEnergy()
     }
   }
@@ -68,24 +68,24 @@ trait AppliedEnergistics2 extends Common with IGridHost {
 
   override def clearRemoved() {
     super.clearRemoved()
-    if (useAppliedEnergistics2Power) requestGridNodeStateUpdate()
+    if (useAppliedEnergistics2Power()) requestGridNodeStateUpdate()
   }
 
   override def setRemoved() {
     super.setRemoved()
-    if (useAppliedEnergistics2Power) securityBreak()
+    if (useAppliedEnergistics2Power()) securityBreak()
   }
 
   override def onChunkUnloaded() {
     super.onChunkUnloaded()
-    if (useAppliedEnergistics2Power) securityBreak()
+    if (useAppliedEnergistics2Power()) securityBreak()
   }
 
   // ----------------------------------------------------------------------- //
 
   override def loadForServer(nbt: CompoundNBT) {
     super.loadForServer(nbt)
-    if (useAppliedEnergistics2Power) loadNode(nbt)
+    if (useAppliedEnergistics2Power()) loadNode(nbt)
   }
 
   private def loadNode(nbt: CompoundNBT): Unit = {
@@ -103,7 +103,7 @@ trait AppliedEnergistics2 extends Common with IGridHost {
 
   override def saveForServer(nbt: CompoundNBT) {
     super.saveForServer(nbt)
-    if (useAppliedEnergistics2Power) saveNode(nbt)
+    if (useAppliedEnergistics2Power()) saveNode(nbt)
   }
 
   private def saveNode(nbt: CompoundNBT): Unit = {
