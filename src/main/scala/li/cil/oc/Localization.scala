@@ -7,7 +7,10 @@ import net.minecraft.util.text.event.HoverEvent
 import scala.util.matching.Regex
 
 object Localization {
-  private def resolveKey(key: String) = if (canLocalize(Settings.namespace + key)) Option(Settings.namespace + key) else Option.empty
+  private def resolveKey(key: String) =
+    if (canLocalize(Settings.namespace + key)) Option(Settings.namespace + key)
+    else if (canLocalize(key)) Option(key)
+    else Option.empty
 
   def canLocalize(key: String): Boolean = LanguageMap.getInstance.has(key)
 
