@@ -198,7 +198,9 @@ dependencies {
     // required for tests but cannot use implementation as that would clash with scorge at runtime
     compileOnly "org.scala-lang:scala-library:2.13.4"
     //implementation "net.minecraftforge:Scorge:${config.scorge.version}"
-    implementation(group: 'com.kotori316', name: 'ScalableCatsForce'.toLowerCase(Locale.ROOT), version: '2.13.5-build-2', classifier: 'dev')
+    runtimeOnly(group: "com.kotori316", name: "ScalableCatsForce".toLowerCase(), version: "3.3.0-build-2", classifier: "with-library") {
+        transitive(false)
+    }
 
     embedded "com.typesafe:config:1.2.1"
 
