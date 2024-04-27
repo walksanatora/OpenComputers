@@ -1,7 +1,6 @@
 package li.cil.oc.common
 
 import java.util.function.Supplier
-
 import com.google.common.base.Strings
 import li.cil.oc._
 import li.cil.oc.common.{PacketHandler => CommonPacketHandler}
@@ -39,16 +38,16 @@ import net.minecraftforge.event.RegistryEvent.MissingMappings
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import net.minecraftforge.fml.network.NetworkEvent
 import net.minecraftforge.fml.network.NetworkRegistry
 import net.minecraftforge.registries.ForgeRegistries
-import net.minecraftforge.scorge.lang.ScorgeModLoadingContext
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 
 class Proxy {
-  protected val modBus = ScorgeModLoadingContext.get.getModEventBus
+  protected val modBus = FMLJavaModLoadingContext.get().getModEventBus
   modBus.register(classOf[ContainerTypes])
   modBus.register(classOf[EntityTypes])
   modBus.register(classOf[TileEntityTypes])

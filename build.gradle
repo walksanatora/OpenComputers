@@ -170,6 +170,17 @@ repositories {
             includeModule "net.minecraftforge", "Scorge"
         }
     }
+
+    maven {
+        name = "Azure-SLP"
+        url = uri("https://pkgs.dev.azure.com/Kotori316/minecraft/_packaging/mods/maven/v1")
+        content {
+            it.includeModule("com.kotori316", "ScalableCatsForce".toLowerCase())
+            it.includeModule("org.typelevel", "cats-core_3")
+            it.includeModule("org.typelevel", "cats-kernel_3")
+            it.includeModule("org.typelevel", "cats-free_3")
+        }
+    }
     mavenCentral()
 }
 
@@ -186,7 +197,9 @@ dependencies {
 
     // required for tests but cannot use implementation as that would clash with scorge at runtime
     compileOnly "org.scala-lang:scala-library:2.13.4"
-    implementation "net.minecraftforge:Scorge:${config.scorge.version}"
+    //implementation "net.minecraftforge:Scorge:${config.scorge.version}"
+    implementation(group: 'com.kotori316', name: 'ScalableCatsForce'.toLowerCase(Locale.ROOT), version: '2.13.5-build-2', classifier: 'dev')
+
     embedded "com.typesafe:config:1.2.1"
 
     compileOnly fg.deobf("li.cil.tis3d:tis3d-1.16.5-forge:${config.tis3d.version}")

@@ -5,7 +5,7 @@ import li.cil.oc.integration.Mods
 import li.cil.tis3d.api.serial.SerialInterfaceProvider
 import net.minecraftforge.event.RegistryEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
-import net.minecraftforge.scorge.lang.ScorgeModLoadingContext
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 
 object ModTIS3D extends ModProxy {
   override def getMod = Mods.TIS3D
@@ -16,6 +16,6 @@ object ModTIS3D extends ModProxy {
   }
 
   override def preInitialize(): Unit = {
-    ScorgeModLoadingContext.get.getModEventBus.register(this)
+    FMLJavaModLoadingContext.get.getModEventBus.register(this)
   }
 }

@@ -1,7 +1,6 @@
 package li.cil.oc
 
 import java.nio.file.Paths
-
 import li.cil.oc.common.IMC
 import li.cil.oc.common.Proxy
 import li.cil.oc.common.init.Blocks
@@ -20,15 +19,17 @@ import net.minecraftforge.forgespi.Environment
 import net.minecraftforge.fml.InterModComms
 import net.minecraftforge.fml.ModContainer
 import net.minecraftforge.fml.ModLoadingContext
+import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import net.minecraftforge.fml.loading.FMLPaths
 import net.minecraftforge.fml.network.simple.SimpleChannel
-import net.minecraftforge.scorge.lang.ScorgeModLoadingContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 import scala.collection.convert.ImplicitConversionsToScala._
 
+@Mod(OpenComputers.ID)
 object OpenComputers {
   final val ID = "opencomputers"
 
@@ -61,11 +62,11 @@ object OpenComputers {
 class OpenComputers {
   val modContainer: ModContainer = ModLoadingContext.get.getActiveContainer
 
-  ScorgeModLoadingContext.get.getModEventBus.register(this)
+  FMLJavaModLoadingContext.get().getModEventBus.register(this)
   OpenComputers.instance = Some(this)
 
   MinecraftForge.EVENT_BUS.register(OpenComputers.proxy)
-  ScorgeModLoadingContext.get.getModEventBus.register(OpenComputers.proxy)
+  FMLJavaModLoadingContext.get().getModEventBus.register(OpenComputers.proxy)
   Settings.load(FMLPaths.CONFIGDIR.get().resolve(Paths.get("opencomputers", "settings.conf")).toFile())
   OpenComputers.proxy.preInit()
   MinecraftForge.EVENT_BUS.register(ThreadPoolFactory)
