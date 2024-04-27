@@ -41,29 +41,10 @@ object OpenComputers {
 
   final val log: Logger = LogManager.getLogger(Name)
 
-  lazy val proxy: Proxy = {
-    val cls = Environment.get.getDist match {
-      case Dist.CLIENT => Class.forName("li.cil.oc.client.Proxy")
-      case _ => Class.forName("li.cil.oc.common.Proxy")
-    }
-    cls.getConstructor().newInstance().asInstanceOf[Proxy]
-  }
-
-  var channel: SimpleChannel = null
-
-  private var instance: Option[OpenComputers] = None
-
-  def get = instance match {
-    case Some(oc) => oc
-    case _ => throw new IllegalStateException("not initialized")
-  }
-}
-
-class OpenComputers {
   val modContainer: ModContainer = ModLoadingContext.get.getActiveContainer
 
   FMLJavaModLoadingContext.get().getModEventBus.register(this)
-  OpenComputers.instance = Some(this)
+  //OpenComputers.instance = Some()
 
   MinecraftForge.EVENT_BUS.register(OpenComputers.proxy)
   FMLJavaModLoadingContext.get().getModEventBus.register(OpenComputers.proxy)
@@ -89,4 +70,24 @@ class OpenComputers {
       InterModComms.getMessages(OpenComputers.ID).sequential.iterator.foreach(IMC.handleMessage)
     }): Runnable)
   }
+
+  lazy val proxy: Proxy = {
+    val cls = Environment.get.getDist match {
+      case Dist.CLIENT => Class.forName("li.cil.oc.client.Proxy")
+      case _ => Class.forName("li.cil.oc.common.Proxy")
+    }
+    cls.getConstructor().newInstance().asInstanceOf[Proxy]
+  }
+
+  var channel: SimpleChannel = null
+
+//  private var instance: Option[OpenComputers] = None
+//
+//  def get = instance match {
+//    case Some(oc) => oc
+//    case _ => throw new IllegalStateException("not initialized")
+//  }
+}
+
+class OpenComputers {
 }
